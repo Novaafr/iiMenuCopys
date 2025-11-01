@@ -84,8 +84,6 @@ namespace iiMenu.Menu
             // Version Checker
             if (downloader.DownloadString("https://pastebin.com/raw/yApU6qHZ").Contains(PluginInfo.Version) == false)
             {
-                MelonCoroutines.Start(AutoUpdate());
-
                 NotifiLib.SendNotification("<color=red>[UPDATE]</color> menu needs updated!");
                 Application.OpenURL("https://pastebin.com/raw/fxcK9stm");
                 PluginInfo.Name = "UPDATE NEEDED";
@@ -683,37 +681,6 @@ banned while using this, please report it to the discord server.";
             catch (Exception exception)
             {
                 UnityEngine.Debug.LogError(string.Format("iiMenu <b>FATAL ERROR</b> {1} - {0}", exception.Message, exception.StackTrace));
-            }
-        }
-
-        public static IEnumerator AutoUpdate()
-        {
-            yield return new WaitForSeconds(0.2f);
-
-            string downloadURL = "https://example.com/ii.Menu.Copys.dll";
-            string modsFolder = Path.Combine(Application.persistentDataPath, "Mods");
-            if (!Directory.Exists(modsFolder))
-                Directory.CreateDirectory(modsFolder);
-
-            string localPath = Path.Combine(modsFolder, "ii.Menu.Copys.dll");
-
-            if (File.Exists(localPath))
-            {
-                Debug.Log("DLL already exists, skipping download.");
-                yield break;
-            }
-
-            UnityWebRequest www = UnityWebRequest.Get(downloadURL);
-            yield return www.SendWebRequest();
-
-            if (www.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError("Download failed: " + www.error);
-            }
-            else
-            {
-                File.WriteAllBytes(localPath, www.downloadHandler.data);
-                Debug.Log("Menu DLL downloaded successfully to: " + localPath);
             }
         }
 
@@ -2100,6 +2067,7 @@ banned while using this, please report it to the discord server.";
             Draw();
         }
 
+        // ADMIN MODS ARE PLAYERID LOCKED
         public static void SetupAdminPanel(string adminName)
         {
             List<ButtonInfo> list = Buttons.buttons[0].ToList<ButtonInfo>();
