@@ -403,9 +403,9 @@ namespace iiMenu.Menu
                 new ButtonInfo { buttonText = "Destroy Gun", method =() => Overpowered.DestroyGun(), toolTip = "Makes new players not see whoever your hand desires." },
                 new ButtonInfo { buttonText = "Destroy All", method =() => Overpowered.DestroyAll(), isTogglable = false, toolTip = "Every player that joins after you will not be able to see anyone." },
 
-                new ButtonInfo { buttonText = "Spawn Blue Lucy", method =() => Experimental.SpawnLucy(HalloweenGhostChaser.ChaseState.Gong, false), isTogglable = false, toolTip = "Spawns the ghost Blue Lucy in forest."},
-                new ButtonInfo { buttonText = "Spawn Red Lucy", method =() => Experimental.SpawnLucy(HalloweenGhostChaser.ChaseState.Gong, true), isTogglable = false, toolTip = "Spawns the ghost Red Lucy in forest."},
-                new ButtonInfo { buttonText = "Despawn Lucy", method =() => Experimental.SpawnLucy(HalloweenGhostChaser.ChaseState.Dormant, true), isTogglable = false, toolTip = "Despawns the ghost Lucy in forest."},
+                //new ButtonInfo { buttonText = "Spawn Blue Lucy", method =() => Experimental.SpawnLucy(HalloweenGhostChaser.ChaseState.Gong, false), isTogglable = false, toolTip = "Spawns the ghost Blue Lucy in forest."},
+                //new ButtonInfo { buttonText = "Spawn Red Lucy", method =() => Experimental.SpawnLucy(HalloweenGhostChaser.ChaseState.Gong, true), isTogglable = false, toolTip = "Spawns the ghost Red Lucy in forest."},
+                //new ButtonInfo { buttonText = "Despawn Lucy", method =() => Experimental.SpawnLucy(HalloweenGhostChaser.ChaseState.Dormant, true), isTogglable = false, toolTip = "Despawns the ghost Lucy in forest."},
 
                 //new ButtonInfo { buttonText = "Break Audio Gun", method =() => Overpowered.BreakAudioGun(), toolTip = "Attempts to break the audio of whoever your hand desires." },
                 //new ButtonInfo { buttonText = "Break Audio All", method =() => Overpowered.BreakAudioAll(), toolTip = "Attempts to breaks everyone's audio." },
