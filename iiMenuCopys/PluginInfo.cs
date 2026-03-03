@@ -3,6 +3,7 @@
  *  you can take the code ig
 */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -30,7 +31,9 @@ namespace iiMenu
         // https://pastebin.com/raw/yApU6qHZ - version link
     }
 
-    public class ServerData
+
+    [Serializable]
+    public class ServerData : Il2CppSystem.Object
     {
         public string menu_version;
         public string min_version;
@@ -47,6 +50,7 @@ namespace iiMenu
         public bool locked;
     }
 
+    [Serializable]
     public class Admin
     {
         public string name;

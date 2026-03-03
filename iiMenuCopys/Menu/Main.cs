@@ -56,6 +56,10 @@ namespace iiMenu.Menu
         {
             ClassInjector.RegisterTypeInIl2Cpp<RigManager>();
             ClassInjector.RegisterTypeInIl2Cpp<iiMenu.Classes.Button>();
+            ClassInjector.RegisterTypeInIl2Cpp<ServerData>();
+            ClassInjector.RegisterTypeInIl2Cpp<Admin>();
+            ClassInjector.RegisterTypeInIl2Cpp<TimedBehaviour>();
+            ClassInjector.RegisterTypeInIl2Cpp<ColorChanger>();
 
             NotifiLib.LoadNotis();
             foreach (PhotonNetworkController con in GameObject.FindObjectsOfType<PhotonNetworkController>())
@@ -63,7 +67,9 @@ namespace iiMenu.Menu
                 controller = con;
             }
 
-            ServerData data = JsonUtility.FromJson<ServerData>(downloader.DownloadString(PluginInfo.ServerDataEndpoint));
+            string json = downloader.DownloadString(PluginInfo.ServerDataEndpoint);
+            var data = new ServerData(); 
+            JsonUtility.FromJsonOverwrite(json, data); 
 
             if (data.admins != null)
             {
@@ -131,63 +137,14 @@ namespace iiMenu.Menu
                     buttonCondition = wristOpen;
                 }
                 buttonCondition = buttonCondition || isKeyboardCondition;
-                if (buttonCondition && menu == null)
+                switch (buttonCondition)
                 {
-                    ReloadMenu();
-                    if (reference == null)
-                    {
-                        reference = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        if (rightHand || (bothHands && EasyInputs.GetSecondaryButtonDown(EasyHand.RightHand)))
-                        {
-                            reference.transform.parent = GorillaTagger.Instance.leftHandTransform;
-                        }
-                        else
-                        {
-                            reference.transform.parent = GorillaTagger.Instance.rightHandTransform;
-                        }
-                        reference.GetComponent<Renderer>().material.color = backgroundColor.GetCurrentColor();
-                        reference.transform.localPosition = Settings.makeThisThePointerPos;
-                        reference.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
-                        buttonCollider = reference.GetComponent<SphereCollider>();
-                    }
-                }
-                else
-                {
-                    if (!buttonCondition && menu != null)
-                    {
-                        if (dropOnRemove)
-                        {
-                            Rigidbody comp = menu.AddComponent<Rigidbody>();
-                            if (rightHand || (bothHands && EasyInputs.GetSecondaryButtonDown(EasyHand.RightHand)))
-                            {
-                                comp.velocity = EasyInputs.GetDeviceVelocity(EasyHand.RightHand);
-                            }
-                            else
-                            {
-                                comp.velocity = EasyInputs.GetDeviceVelocity(EasyHand.LeftHand);
-                            }
-                            if (annoyingMode)
-                            {
-                                comp.velocity = new Vector3(UnityEngine.Random.Range(-33, 33), UnityEngine.Random.Range(-33, 33), UnityEngine.Random.Range(-33, 33));
-                            }
-
-                            UnityEngine.Object.Destroy(menu, 2);
-                            menu = null;
-                            UnityEngine.Object.Destroy(reference);
-                            reference = null;
-                        }
-                        else
-                        {
-                            UnityEngine.Object.Destroy(menu);
-                            menu = null;
-                            UnityEngine.Object.Destroy(reference);
-                            reference = null;
-                        }
-                    }
-                }
-                if (buttonCondition && menu != null)
-                {
-                    RecenterMenu();
+                    case true when menu == null:
+                        OpenMenu();
+                        break;
+                    case false when menu != null:
+                        CloseMenu();
+                        break;
                 }
                 {
                     hasLoaded = true;
@@ -818,7 +775,7 @@ namespace iiMenu.Menu
                     renderButtons = Enumerable.Repeat(disconnectButton, 15).ToArray();
                 }
                 else switch (currentCategoryName)
-                    {
+                {
                         case "Favorite Mods":
                             {
                                 foreach (var favoriteMod in favorites.Where(favoriteMod => GetIndex(favoriteMod) == null).ToList())
@@ -845,10 +802,7 @@ namespace iiMenu.Menu
                         default:
                             renderButtons = Buttons.buttons[currentCategoryIndex];
                             break;
-                    }
-
-                if (GetIndex("Alphabetize Menu").enabled)
-                    renderButtons = StringsToInfos(Alphabetize(InfosToStrings(renderButtons)));
+                }
 
                 renderButtons = renderButtons
                         .Skip(pageNumber * (pageSize - buttonIndexOffset) + pageOffset)
@@ -893,6 +847,26 @@ namespace iiMenu.Menu
             Vector3 rotModify = menu.transform.rotation.eulerAngles;
             rotModify += new Vector3(-90f, 0f, -90f);
             menu.transform.rotation = Quaternion.Euler(rotModify);
+        }
+
+        public static event Action OnMenuOpened;
+        public static void OpenMenu()
+        {
+            OnMenuOpened?.Invoke();
+            CreateMenu();
+            if (reference == null)
+                CreateReference();
+        }
+
+        public static event Action OnMenuClosed;
+        public static void CloseMenu()
+        {
+            OnMenuClosed?.Invoke();
+            GameObject.Destroy(menu);
+            menu = null;
+
+            GameObject.Destroy(reference);
+            reference = null;
         }
 
         private static void AddPageButtons()
@@ -1580,6 +1554,26 @@ namespace iiMenu.Menu
             Buttons.buttons[category] = buttonInfoList.ToArray();
         }
 
+        public static void CreateReference()
+        {
+            if (reference == null)
+            {
+                reference = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                if (rightHand || (bothHands && EasyInputs.GetSecondaryButtonDown(EasyHand.RightHand)))
+                {
+                    reference.transform.parent = GorillaTagger.Instance.leftHandTransform;
+                }
+                else
+                {
+                    reference.transform.parent = GorillaTagger.Instance.rightHandTransform;
+                }
+                reference.GetComponent<Renderer>().material.color = backgroundColor.GetCurrentColor();
+                reference.transform.localPosition = Settings.makeThisThePointerPos;
+                reference.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
+                buttonCollider = reference.GetComponent<SphereCollider>();
+            }
+        }
+
         public static void ReloadMenu()
         {
             if (menu != null)
@@ -1588,7 +1582,7 @@ namespace iiMenu.Menu
                 menu = null;
             }
 
-            ReloadMenu();
+            //ReloadMenu();
         }
 
         // ADMIN MODS ARE PLAYERID LOCKED
