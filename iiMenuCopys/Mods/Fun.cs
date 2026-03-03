@@ -25,29 +25,47 @@ namespace iiMenu.Mods
 
         public static void FixHead()
         {
-            //GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.x = 0f;
-            //GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.y = 0f;
-            //GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.z = 0f;
+            var head = GorillaTagger.Instance.myVRRig.head;
+
+            Vector3 offset = head.trackingRotationOffset;
+            offset = Vector3.zero;
+            head.trackingRotationOffset = offset;
         }
 
         public static void UpsideDownHead()
         {
-            //GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.z = 180f;
+            var head = GorillaTagger.Instance.myVRRig.head;
+
+            Vector3 offset = head.trackingRotationOffset;
+            offset.z = 180f;
+            head.trackingRotationOffset = offset;
         }
 
         public static void SpinHeadX()
         {
-            // GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.x += 10f;
+            var head = GorillaTagger.Instance.myVRRig.head;
+
+            Vector3 offset = head.trackingRotationOffset;
+            offset.x += 10f;
+            head.trackingRotationOffset = offset;
         }
 
         public static void SpinHeadY()
         {
-            // GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.y += 10f;
+            var head = GorillaTagger.Instance.myVRRig.head;
+
+            Vector3 offset = head.trackingRotationOffset;
+            offset.y += 10f;
+            head.trackingRotationOffset = offset;
         }
 
         public static void SpinHeadZ()
         {
-            // GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.z =+ GorillaTagger.Instance.myVRRig.head.trackingRotationOffset.z+ 10f;
+            var head = GorillaTagger.Instance.myVRRig.head;
+
+            Vector3 offset = head.trackingRotationOffset;
+            offset.z += 10f;   // also fixed your =+ typo
+            head.trackingRotationOffset = offset;
         }
 
         public static void FlipHands()
