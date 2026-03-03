@@ -427,13 +427,11 @@ namespace iiMenu.Menu
             "Fun Mods",
             "Sound Mods",
             "Projectile Mods",
-            "Master Mods",
             "Overpowered Mods",
             "Experimental Mods",
-            "Favorite Mods",
-            "Enabled Mods",
             "Admin Mods",
             "Soundboard",
+            "External",
             "Temporary Category"
         };
     }

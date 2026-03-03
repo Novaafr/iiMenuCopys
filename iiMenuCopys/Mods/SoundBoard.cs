@@ -43,7 +43,7 @@ namespace iiMenu.Mods
                 Directory.CreateDirectory(basePath);
 
             List<string> enabledSounds = new List<string>();
-            foreach (ButtonInfo binfo in Buttons.buttons[20])
+            foreach (ButtonInfo binfo in Buttons.buttons[Main.GetCategory("Soundboard")])
             {
                 if (binfo.enabled)
                     enabledSounds.Add(binfo.overlapText);
@@ -112,7 +112,7 @@ namespace iiMenu.Mods
             soundbuttons.Add(new ButtonInfo { buttonText = "Reload Sounds", method = () => LoadSoundboard(), isTogglable = false, toolTip = "Reloads all of your sounds." });
             soundbuttons.Add(new ButtonInfo { buttonText = "Loop Audio", enableMethod = LoopAudioToggleOn, disableMethod = LoopAudioToggleOff, isTogglable = true, toolTip = "Loop the audio." });
             //soundbuttons.Add(new ButtonInfo { buttonText = "Get More Sounds", method = LoadSoundLibrary, isTogglable = false, toolTip = "Opens a public audio library, where you can download your own sounds." });
-            Buttons.buttons[20] = soundbuttons.ToArray(); // Make this your new buttoninfo[] {} number
+            Buttons.buttons[Main.GetCategory("Soundboard")] = soundbuttons.ToArray(); // Make this your new buttoninfo[] {} number
         }
 
         public static void Play2DAudio(AudioClip sound, float volume)

@@ -747,9 +747,6 @@ namespace iiMenu.Menu
 
         public static int pageNumber = 0;
 
-        public static int GetCategory(string categoryName) =>
-            Buttons.categoryNames.ToList().IndexOf(categoryName);
-
         public static int pageButtonType = 1;
 
         public static int _currentCategoryIndex;
@@ -837,6 +834,8 @@ namespace iiMenu.Menu
         public static List<GameObject> lights = new List<GameObject> { };
 
         public static List<string> favorites = new List<string> { "Exit Favorite Mods" };
+
+        public static List<string> quickActions = new List<string>();
 
         public static List<GameObject> holidayobjects = new List<GameObject> { };
 
@@ -1528,6 +1527,24 @@ namespace iiMenu.Menu
 
             AddPageButtons();
 
+            float hkbStartTime = -0.3f;
+
+            if (quickActions.Count > 0)
+            {
+                foreach (string action in quickActions)
+                {
+                    ButtonInfo button = GetIndex(action);
+                    if (button == null)
+                    {
+                        quickActions.Remove(action);
+                        continue;
+                    }
+
+                    AddButton(hkbStartTime, -1, button);
+                    hkbStartTime -= 0.1f;
+                }
+            }
+
             // Button render code
             int buttonIndexOffset = 0;
             ButtonInfo[] renderButtons = new ButtonInfo[] { };
@@ -1549,8 +1566,19 @@ namespace iiMenu.Menu
             }
             else if (currentCategoryName == "Enabled Mods")
             {
-                List<ButtonInfo> enabledMods = new List<ButtonInfo>() { GetIndex("Exit Enabled Mods") };
-                enabledMods.AddRange(Buttons.buttons.SelectMany(buttonlist => buttonlist).Where(v => v.enabled));
+                List<ButtonInfo> enabledMods = new List<ButtonInfo>() { };
+                int categoryIndex = 0;
+                foreach (ButtonInfo[] buttonlist in Buttons.buttons)
+                {
+                    foreach (ButtonInfo v in buttonlist)
+                    {
+                        if (v.enabled && (!Buttons.categoryNames[categoryIndex].Contains("Settings")))
+                            enabledMods.Add(v);
+                    }
+                    categoryIndex++;
+                }
+                enabledMods = enabledMods.OrderBy(v => v.buttonText).ToList();
+                enabledMods.Insert(0, GetIndex("Exit Enabled Mods"));
 
                 renderButtons = enabledMods.ToArray();
             }
@@ -1976,22 +2004,125 @@ namespace iiMenu.Menu
             return html;
         }
 
+        private static readonly Dictionary<string, (int Category, int Index)> cacheGetIndex = new Dictionary<string, (int Category, int Index)>(); // Looping through 800 elements is not a light task :/
         public static ButtonInfo GetIndex(string buttonText)
         {
-            foreach (ButtonInfo[] buttons in Menu.Buttons.buttons)
+            if (buttonText == null)
+                return null;
+
+            if (cacheGetIndex.ContainsKey(buttonText))
             {
+                var CacheData = cacheGetIndex[buttonText];
+                try
+                {
+                    if (Buttons.buttons[CacheData.Category][CacheData.Index].buttonText == buttonText)
+                        return Buttons.buttons[CacheData.Category][CacheData.Index];
+                }
+                catch { cacheGetIndex.Remove(buttonText); }
+            }
+
+            int categoryIndex = 0;
+            foreach (ButtonInfo[] buttons in Buttons.buttons)
+            {
+                int buttonIndex = 0;
                 foreach (ButtonInfo button in buttons)
                 {
                     if (button.buttonText == buttonText)
                     {
+                        try
+                        {
+                            cacheGetIndex.Add(buttonText, (categoryIndex, buttonIndex));
+                        }
+                        catch
+                        {
+                            if (cacheGetIndex.ContainsKey(buttonText))
+                                cacheGetIndex.Remove(buttonText);
+                        }
+
                         return button;
                     }
+                    buttonIndex++;
                 }
+                categoryIndex++;
             }
 
             return null;
         }
 
+        public static int GetCategory(string categoryName) =>
+            Buttons.categoryNames.ToList().IndexOf(categoryName);
+
+        public static int AddCategory(string categoryName)
+        {
+            List<ButtonInfo[]> buttonInfoList = Buttons.buttons.ToList();
+            buttonInfoList.Add(new ButtonInfo[] { });
+            Buttons.buttons = buttonInfoList.ToArray();
+
+            List<string> categoryList = Buttons.categoryNames.ToList();
+            categoryList.Add(categoryName);
+            Buttons.categoryNames = categoryList.ToArray();
+
+            return Buttons.buttons.Length - 1;
+        }
+
+        public static void RemoveCategory(string categoryName)
+        {
+            List<ButtonInfo[]> buttonInfoList = Buttons.buttons.ToList();
+            buttonInfoList.RemoveAt(GetCategory(categoryName));
+            Buttons.buttons = buttonInfoList.ToArray();
+
+            List<string> categoryList = Buttons.categoryNames.ToList();
+            categoryList.Remove(categoryName);
+            Buttons.categoryNames = categoryList.ToArray();
+        }
+
+        public static void AddButton(int category, ButtonInfo button, int index = -1)
+        {
+            List<ButtonInfo> buttonInfoList = Buttons.buttons[category].ToList();
+            if (index > 0)
+                buttonInfoList.Insert(index, button);
+            else
+                buttonInfoList.Add(button);
+
+            Buttons.buttons[category] = buttonInfoList.ToArray();
+        }
+
+        public static void AddButtons(int category, ButtonInfo[] buttons, int index = -1)
+        {
+            List<ButtonInfo> buttonInfoList = Buttons.buttons[category].ToList();
+            if (index > 0)
+            {
+                for (int i = 0; i < buttons.Length; i++)
+                    buttonInfoList.Insert(index + i, buttons[i]);
+            }
+            else
+            {
+                foreach (ButtonInfo button in buttons)
+                    buttonInfoList.Add(button);
+            }
+
+            Buttons.buttons[category] = buttonInfoList.ToArray();
+        }
+
+        public static void RemoveButton(int category, string name, int index = -1)
+        {
+            List<ButtonInfo> buttonInfoList = Buttons.buttons[category].ToList();
+            if (index > 0)
+                buttonInfoList.RemoveAt(index);
+            else
+            {
+                foreach (ButtonInfo button in buttonInfoList)
+                {
+                    if (button.buttonText == name)
+                    {
+                        buttonInfoList.Remove(button);
+                        break;
+                    }
+                }
+            }
+
+            Buttons.buttons[category] = buttonInfoList.ToArray();
+        }
         public static void ReloadMenu()
         {
             if (menu != null)
@@ -2012,7 +2143,7 @@ namespace iiMenu.Menu
             buttonInfo.buttonText = "Admin Mods";
             buttonInfo.method = delegate ()
             {
-                Settings.EnableAdmin();
+                currentCategoryName = "Admin Mods";
             };
             buttonInfo.isTogglable = false;
             buttonInfo.toolTip = "Opens the admin mods.";
@@ -2139,6 +2270,7 @@ namespace iiMenu.Menu
             if (currentCategoryName == "Enabled Mods")
             {
                 List<string> enabledMods = new List<string>() { "Exit Enabled Mods" };
+                int categoryIndex = 0;
                 foreach (ButtonInfo[] buttonlist in Buttons.buttons)
                 {
                     foreach (ButtonInfo v in buttonlist)
@@ -2146,6 +2278,7 @@ namespace iiMenu.Menu
                         if (v.enabled)
                             enabledMods.Add(v.buttonText);
                     }
+                    categoryIndex++;
                 }
                 lastPage = ((enabledMods.Count + pageSize - 1) / pageSize) - 1;
             }
@@ -2161,15 +2294,14 @@ namespace iiMenu.Menu
                 if (buttonText == "NextPage")
                 {
                     pageNumber++;
-                    if (pageNumber > lastPage)
-                        pageNumber = 0;
+                    pageNumber %= lastPage + 1;
                 }
                 else
                 {
                     ButtonInfo target = GetIndex(buttonText);
                     if (target != null)
                     {
-                        if (fromMenu && !ignoreForce && ((leftGrab)))
+                        if (fromMenu && !ignoreForce  && ((leftGrab) || (leftTrigger > 0.5f)))
                         {
                             if (target.buttonText != "Exit Favorite Mods")
                             {
@@ -2191,33 +2323,53 @@ namespace iiMenu.Menu
                         }
                         else
                         {
-                            if (target.isTogglable)
+                            if (fromMenu && !ignoreForce && (leftTrigger > 0.5f))
                             {
-                                target.enabled = !target.enabled;
-                                if (target.enabled)
+                                if (!quickActions.Contains(target.buttonText))
                                 {
-                                    if (fromMenu)
-                                        NotifiLib.SendNotification("<color=grey>[</color><color=green>ENABLE</color><color=grey>]</color> " + target.toolTip);
+                                    quickActions.Add(target.buttonText);
 
-                                    if (target.enableMethod != null)
-                                        try { target.enableMethod.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod enableMethod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                                    if (fromMenu)
+                                        NotifiLib.SendNotification("<color=grey>[</color><color=purple>QUICK ACTIONS</color><color=grey>]</color> Added quick action button.");
                                 }
                                 else
                                 {
-                                    if (fromMenu)
-                                        NotifiLib.SendNotification("<color=grey>[</color><color=red>DISABLE</color><color=grey>]</color> " + target.toolTip);
+                                    quickActions.Remove(target.buttonText);
 
-                                    if (target.disableMethod != null)
-                                        try { target.disableMethod.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod disableMethod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                                    if (fromMenu)
+                                        NotifiLib.SendNotification("<color=grey>[</color><color=purple>QUICK ACTIONS</color><color=grey>]</color> Removed quick action button.");
                                 }
                             }
                             else
                             {
-                                if (fromMenu)
-                                    NotifiLib.SendNotification("<color=grey>[</color><color=green>ENABLE</color><color=grey>]</color> " + target.toolTip);
+                                if (target.isTogglable)
+                                {
+                                    target.enabled = !target.enabled;
+                                    if (target.enabled)
+                                    {
+                                        if (fromMenu)
+                                            NotifiLib.SendNotification("<color=grey>[</color><color=green>ENABLE</color><color=grey>]</color> " + target.toolTip);
 
-                                if (target.method != null)
-                                    try { target.method.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                                        if (target.enableMethod != null)
+                                            try { target.enableMethod.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod enableMethod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                                    }
+                                    else
+                                    {
+                                        if (fromMenu)
+                                            NotifiLib.SendNotification("<color=grey>[</color><color=red>DISABLE</color><color=grey>]</color> " + target.toolTip);
+
+                                        if (target.disableMethod != null)
+                                            try { target.disableMethod.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod disableMethod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                                    }
+                                }
+                                else
+                                {
+                                    if (fromMenu)
+                                        NotifiLib.SendNotification("<color=grey>[</color><color=green>ENABLE</color><color=grey>]</color> " + target.toolTip);
+
+                                    if (target.method != null)
+                                        try { target.method.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                                }
                             }
                         }
                     }
