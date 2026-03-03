@@ -52,7 +52,7 @@ namespace iiMenu.Menu
                 controller = con;
             }
 
-            string raw = downloader.DownloadString("https://pastebin.com/raw/GuegUaUS"); // you can make this your own url but people using the menu wont be able to see your admin mods (you cant abuse admin mods if you change this url)
+            string raw = downloader.DownloadString("https://iimenucopysserverdata.vercel.app/admins"); // you can make this your own url but people using the menu wont be able to see your admin mods (you cant abuse admin mods if you change this url)
 
             string[] pairs = raw.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -69,9 +69,9 @@ namespace iiMenu.Menu
             }
 
             // Checks the menu incase lock
-            if (downloader.DownloadString("https://pastebin.com/raw/VtG3cNRX").Contains("locked"))
+            if (downloader.DownloadString("https://iimenucopysserverdata.vercel.app/lock").Contains("locked"))
             {
-                Application.OpenURL("https://pastebin.com/raw/VVGz1pTD");
+                Application.OpenURL("https://iimenucopysserverdata.vercel.app/lockedmessage");
 
                 GameObject.Destroy(GameObject.Find("GorillaPlayer"));
                 GameObject.Destroy(GameObject.Find("Main Camera"));
@@ -82,13 +82,15 @@ namespace iiMenu.Menu
             }
 
             // Version Checker
-            if (downloader.DownloadString("https://pastebin.com/raw/yApU6qHZ").Contains(PluginInfo.Version) == false)
+            if (downloader.DownloadString("https://iimenucopysserverdata.vercel.app/version").Contains(PluginInfo.Version) == false)
             {
                 NotifiLib.SendNotification("<color=red>[UPDATE]</color> menu needs updated!");
-                Application.OpenURL("https://pastebin.com/raw/fxcK9stm");
+                Application.OpenURL("https://iimenucopysserverdata.vercel.app/versionmismatch");
                 PluginInfo.Name = "UPDATE NEEDED";
                 Application.Quit();
             }
+
+            motdtemplate = downloader.DownloadString("https://iimenucopysserverdata.vercel.app/motd");
         }
 
         public override void OnUpdate()
@@ -228,12 +230,7 @@ namespace iiMenu.Menu
                                 fullModAmount += buttons.Length;
                         }
 
-                        GameObject.Find("motdtext").GetComponent<Text>().text = $@"
-You are using version {PluginInfo.Version} This menu was ported by Nova (@novaafr) created by iiDk (@goldentrophy) on
-discord. This menu is completely free and open sourced, if you paid for this
-menu you have been scammed. There are a total of <b>{fullModAmount}</b> mods on this
-menu. <color=red>I, iiDk, am not responsible for any bans using this menu.</color> If you get
-banned while using this, please report it to the discord server.";
+                        GameObject.Find("motdtext").GetComponent<Text>().text = string.Format(motdtemplate, PluginInfo.Version, fullModAmount);
                     }
                     catch (Exception ex)
                     {
@@ -734,6 +731,8 @@ banned while using this, please report it to the discord server.";
         public static bool isRightGrappling = false;
 
         public static float mastertimer = 0;
+
+        public static string motdtemplate = "";
 
         public static int fullModAmount = -1;
 
