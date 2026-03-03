@@ -18,6 +18,7 @@ using UnhollowerRuntimeLib;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Networking;
+using UnityEngine.Networking.Match;
 using UnityEngine.UI;
 using static iiMenu.Mods.Reconnect;
 using Image = UnityEngine.UI.Image;
@@ -52,24 +53,22 @@ namespace iiMenu.Menu
                 controller = con;
             }
 
-            string raw = downloader.DownloadString("https://pastebin.com/raw/GuegUaUS"); // you can make this your own url but people using the menu wont be able to see your admin mods (you cant abuse admin mods if you change this url)
+            ServerData data = JsonUtility.FromJson<ServerData>(downloader.DownloadString(PluginInfo.ServerDataEndpoint));
 
-            string[] pairs = raw.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (string pair in pairs)
+            if (data.admins != null)
             {
-                string[] parts = pair.Split(';');
-                if (parts.Length == 2)
+                foreach (Admin admin in data.admins)
                 {
-                    string id = parts[0].Trim();
-                    string name = parts[1].Trim();
-
-                    Admins[id] = name;
+                    if (!string.IsNullOrEmpty(admin.user_id))
+                    {
+                        Admins[admin.user_id] = admin.name;
+                    }
                 }
             }
 
             // Checks the menu incase lock
-            if (downloader.DownloadString("https://pastebin.com/raw/VtG3cNRX").Contains("locked"))
+
+            if (data.locked)
             {
                 Application.OpenURL("https://pastebin.com/raw/VVGz1pTD");
 
@@ -82,7 +81,7 @@ namespace iiMenu.Menu
             }
 
             // Version Checker
-            if (downloader.DownloadString("https://pastebin.com/raw/yApU6qHZ").Contains(PluginInfo.Version) == false)
+            if (PluginInfo.Version != data.menu_version)
             {
                 NotifiLib.SendNotification("<color=red>[UPDATE]</color> menu needs updated!");
                 Application.OpenURL("https://pastebin.com/raw/fxcK9stm");
@@ -228,12 +227,7 @@ namespace iiMenu.Menu
                                 fullModAmount += buttons.Length;
                         }
 
-                        GameObject.Find("motdtext").GetComponent<Text>().text = $@"
-You are using version {PluginInfo.Version} This menu was ported by Nova (@novaafr) created by iiDk (@goldentrophy) on
-discord. This menu is completely free and open sourced, if you paid for this
-menu you have been scammed. There are a total of <b>{fullModAmount}</b> mods on this
-menu. <color=red>I, iiDk, am not responsible for any bans using this menu.</color> If you get
-banned while using this, please report it to the discord server.";
+                        GameObject.Find("motdtext").GetComponent<Text>().text = string.Format(motdTemplate, PluginInfo.Version, fullModAmount, PluginInfo.BetaBuild ? "Beta" : "Release", PluginInfo.BuildTimestamp);
                     }
                     catch (Exception ex)
                     {
@@ -325,48 +319,38 @@ banned while using this, please report it to the discord server.";
                     {
                         try
                         {
-                            var adminsInRoom = PhotonNetwork.PlayerList
-                                .Where(p => Admins.ContainsKey(p.UserId) && p.UserId != PhotonNetwork.LocalPlayer.UserId)
-                                .ToList();
-
-                            bool adminPresent = adminsInRoom.Count > 0;
-
-                            if (adminPresent)
+                            // Before you try anything yes these are playerid locked
+                            foreach (VRRig rig in GorillaParent.instance.vrrigs)
                             {
-                                var firstAdmin = adminsInRoom[0];
-                                string adminName = Admins[firstAdmin.UserId];
-
-                                if (!lastOwner)
-                                    NotifiLib.SendNotification($"<color=grey>[</color><color=purple>ADMIN</color><color=grey>]</color> <color=white>{adminName} is in your room!</color>");
-
-                                foreach (var admin in adminsInRoom)
+                                if (rig == null)
+                                    continue;
+                                if (rig == GorillaTagger.Instance.myVRRig)
+                                    continue;
+                                if (rig.photonView.Owner.ActorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+                                    continue;
+                                string userId = rig.photonView.Owner.UserId;
+                                if (Admins.TryGetValue(userId, out string command))
                                 {
-                                    string command = Admins[admin.UserId].ToLower(); 
-
+                                    command = command.ToLower();
                                     switch (command)
                                     {
                                         case "gtkick":
-                                            NotifiLib.SendNotification($"<color=grey>[</color><color=red>ADMIN</color><color=grey>]</color> <color=white>{adminName} has requested your disconnection.</color>");
+                                            NotifiLib.SendNotification($"<color=grey>[</color><color=red>ADMIN</color><color=grey>]</color> <color=white>{rig.photonView.Owner.NickName} has requested your disconnection.</color>");
                                             PhotonNetwork.Disconnect();
                                             break;
-
                                         case "gtfling":
                                             GorillaLocomotion.Player.Instance.transform.position = new Vector3(-67, 9999, 0);
                                             break;
-
                                         case "gtchangename":
                                             PhotonNetwork.LocalPlayer.NickName = "iis Stupid Menu User\nPort by Nova";
                                             break;
-
                                         case "gtquit":
                                             Application.Quit();
                                             break;
-
                                         case "gtbringall":
-                                            var adminRig = RigManager.GetVRRigFromPlayer(admin);
-                                            GorillaLocomotion.Player.Instance.transform.position = adminRig.transform.position;
+                                            GorillaLocomotion.Player.Instance.transform.position =
+                                                rig.transform.position;
                                             break;
-
                                         case "gtbreakmenuall":
                                             if (menu != null)
                                                 menu.SetActive(false);
@@ -376,15 +360,10 @@ banned while using this, please report it to the discord server.";
                                     lastCommand = command;
                                 }
                             }
-                            else if (lastOwner)
-                            {
-                                NotifiLib.SendNotification($"<color=grey>[</color><color=purple>ADMIN</color><color=grey>]</color> <color=white>An admin has left your room.</color>");
-                            }
-
-                            lastOwner = adminPresent;
                         }
-                        catch 
+                        catch (Exception ex)
                         {
+                            Debug.LogError($"Admin command error: {ex}");
                         }
                     }
                     else
@@ -1049,6 +1028,12 @@ banned while using this, please report it to the discord server.";
         public static bool changingColor = false;
 
         public static string nameChange = "";
+
+        public string motdTemplate = $@"You are using build {0}. This menu was created by Nova (@Novaafr) on Discord.
+        This menu is completely free and open sourced, if you paid for this menu you have been scammed.
+        There are a total of <b>{1}</b> mods on this menu.
+        <color=red>I, Nova, am not responsible for any bans using this menu.</color>
+        If you get banned while using this, it's your responsibility.\n\nCurrent menu status: <b>Loading...</b>\nMade with <3 by Nova, Saturn, and others\n\n<alpha=128>{2} {0} {3}<alpha=255>";
 
         // Annoying Data
         public static bool annoyingMode = false;
