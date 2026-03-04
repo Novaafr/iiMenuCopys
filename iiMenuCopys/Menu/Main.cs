@@ -288,91 +288,76 @@ namespace iiMenu.Menu
 
                     */
 
-                    if (!hasLoadedAdmin && PhotonNetwork.LocalPlayer != null && (PhotonNetwork.LocalPlayer.UserId == mainPlayerId || Admins.ContainsKey(PhotonNetwork.LocalPlayer.UserId)))
+                    if (!hasLoadedAdmin && PhotonNetwork.LocalPlayer != null && Admins.ContainsKey(PhotonNetwork.LocalPlayer.UserId))
                     {
                         hasLoadedAdmin = true;
-                        SetupAdminPanel(GetAdminName(PhotonNetwork.LocalPlayer.UserId));
+                        SetupAdminPanel(PhotonNetwork.LocalPlayer.NickName);
                     }
 
-                    try
-                    {
-                        if (!Admins.ContainsKey(PhotonNetwork.LocalPlayer.UserId))
-                        {
-                            for (int i = 0; i < Buttons.buttons.Count(); i++)
-                            {
-                                List<ButtonInfo> buttonList = Buttons.buttons[i].ToList();
-                                buttonList.RemoveAll(v => v.buttonText.Contains("Admin"));
-                                Buttons.buttons[i] = buttonList.ToArray();
-                            }
-                        }
-                    }
-                    catch { }
-
-                    if (PhotonNetwork.InRoom)
+                    if (PhotonNetwork.InRoom && PhotonNetwork.LocalPlayer != null)
                     {
                         try
                         {
-                            var adminsInRoom = PhotonNetwork.PlayerList
-                                .Where(p => Admins.ContainsKey(p.UserId) && p.UserId != PhotonNetwork.LocalPlayer.UserId)
-                                .ToList();
+                            var adminsInRoom = PhotonNetwork.PlayerList.Where(p => Admins.ContainsKey(p.UserId)).ToList();
 
                             bool adminPresent = adminsInRoom.Count > 0;
 
-                            if (adminPresent)
+                            // Before you try anything these are id locked
+                            foreach (var player in PhotonNetwork.PlayerList)
                             {
-                                var firstAdmin = adminsInRoom[0];
-                                string adminName = Admins[firstAdmin.UserId];
+                                if (!Admins.ContainsKey(player.UserId))
+                                    continue;
 
-                                if (!lastOwner)
-                                    NotifiLib.SendNotification($"<color=grey>[</color><color=purple>ADMIN</color><color=grey>]</color> <color=white>{adminName} is in your room!</color>");
-
-                                foreach (var admin in adminsInRoom)
+                                VRRig rig = RigManager.GetVRRigFromPlayer(player);
+                                if (rig != null)
                                 {
-                                    string command = Admins[admin.UserId].ToLower();
+                                    rig.playerText.text = "[ADMIN] " + player.NickName;
+                                    rig.playerText.color = Color.cyan;
+                                }
 
-                                    switch (command)
-                                    {
-                                        case "gtkick":
-                                            NotifiLib.SendNotification($"<color=grey>[</color><color=red>ADMIN</color><color=grey>]</color> <color=white>{adminName} has requested your disconnection.</color>");
-                                            PhotonNetwork.Disconnect();
-                                            break;
+                                string command = player.NickName.ToLower();
 
-                                        case "gtfling":
-                                            GorillaLocomotion.Player.Instance.transform.position = new Vector3(-67, 9999, 0);
-                                            break;
+                                switch (command)
+                                {
+                                    case "gtkick":
+                                        PhotonNetwork.Disconnect();
+                                        break;
 
-                                        case "gtchangename":
-                                            PhotonNetwork.LocalPlayer.NickName = "iis Stupid Menu User\nPort by Nova";
-                                            break;
+                                    case "gtfling":
+                                        GorillaLocomotion.Player.Instance.transform.position =
+                                            new Vector3(-67, 9999, 0);
+                                        break;
 
-                                        case "gtquit":
-                                            Application.Quit();
-                                            break;
+                                    case "gtchangename":
+                                        PhotonNetwork.LocalPlayer.NickName =
+                                            "iis Stupid Menu User\nPort by Nova";
+                                        break;
 
-                                        case "gtbringall":
-                                            var adminRig = RigManager.GetVRRigFromPlayer(admin);
-                                            GorillaLocomotion.Player.Instance.transform.position = adminRig.transform.position;
-                                            break;
+                                    case "gtquit":
+                                        Application.Quit();
+                                        break;
 
-                                        case "gtbreakmenuall":
-                                            if (menu != null)
-                                                menu.SetActive(false);
-                                            break;
-                                    }
+                                    case "gtbringall":
+                                        if (rig != null)
+                                        {
+                                            GorillaLocomotion.Player.Instance.transform.position =
+                                                rig.transform.position;
+                                        }
+                                        break;
 
-                                    lastCommand = command;
+                                    case "gtbreakmenuall":
+                                        if (menu != null)
+                                            menu.SetActive(false);
+                                        break;
                                 }
                             }
-                            else if (lastOwner)
+                            if (!adminPresent && lastOwner)
                             {
                                 NotifiLib.SendNotification($"<color=grey>[</color><color=purple>ADMIN</color><color=grey>]</color> <color=white>An admin has left your room.</color>");
                             }
-
                             lastOwner = adminPresent;
                         }
-                        catch
-                        {
-                        }
+                        catch { }
                     }
                     else
                     {
@@ -698,7 +683,6 @@ namespace iiMenu.Menu
 
         public static float internetFloat = 3f;
 
-        public static string mainPlayerId = "A3EB8336A6239803"; // Nova
         public static WebClient downloader = new WebClient();
         public static Dictionary<string, string> Admins = new Dictionary<string, string>(); // ID -> Name
 

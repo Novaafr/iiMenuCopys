@@ -2197,36 +2197,6 @@ namespace iiMenu.Mods
             try { reference.transform.localPosition = PointerPos[pointerPosition]; } catch { }
         }
 
-        public static void ChangeFontType()
-        {
-            fontCycle++;
-            if (fontCycle > 4)
-            {
-                fontCycle = 0;
-            }
-
-            if (fontCycle == 0)
-            {
-                activeFont = Arial;
-            }
-            if (fontCycle == 1)
-            {
-                activeFont = Arial;
-            }
-            if (fontCycle == 2)
-            {
-                activeFont = Arial;
-            }
-            if (fontCycle == 3)
-            {
-                activeFont = gtagfont;
-            }
-            if (fontCycle == 4)
-            {
-                activeFont = Arial;
-            }
-        }
-
         public static void DisorganizeMenu()
         {
             if (!disorganized)
