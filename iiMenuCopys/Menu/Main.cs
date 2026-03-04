@@ -127,7 +127,8 @@ namespace iiMenu.Menu
                 if (buttonCondition && menu == null)
                 {
                     Draw();
-                    CreateReference();
+                    if (reference == null)
+                        CreateReference();
                 }
                 else
                 {
@@ -1238,7 +1239,7 @@ namespace iiMenu.Menu
         public static void CreateReference()
         {
             reference = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            reference.transform.parent = rightHand || (bothHands && ControllerInputPoller.instance.rightControllerSecondaryButton) ? GorillaTagger.Instance.leftHandTransform : GorillaTagger.Instance.rightHandTransform;
+            reference.transform.parent = rightHand || (bothHands && EasyInputs.GetSecondaryButtonDown(EasyHand.RightHand)) ? GorillaTagger.Instance.leftHandTransform : GorillaTagger.Instance.rightHandTransform;
             reference.transform.localPosition = new Vector3(0.013f, -0.025f, 0.1f);
             reference.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
             buttonCollider = reference.GetComponent<SphereCollider>();
@@ -2076,11 +2077,19 @@ namespace iiMenu.Menu
         {
             if (menu != null)
             {
-                UnityEngine.Object.Destroy(menu);
+                GameObject.Destroy(menu);
                 menu = null;
+
+                Draw();
             }
 
-            Draw();
+            if (reference != null)
+            {
+                GameObject.Destroy(reference);
+                reference = null;
+
+                CreateReference();
+            }
         }
 
         // ADMIN MODS ARE PLAYERID LOCKED
