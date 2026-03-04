@@ -133,8 +133,8 @@ namespace iiMenu.Mods
         public static Vector3 makeThisThePointerPos = new Vector3(0f, -0.1f, 0f);
         private static readonly Vector3[] PointerPos = new Vector3[]
         {
-            new Vector3(0f, -0.1f, 0f),
             new Vector3(0.013f, -0.025f, 0.1f),
+            new Vector3(0f, -0.1f, 0f),
             new Vector3(0f, 0.1f, -0.05f),
             new Vector3(0f, 0.0666f, 0.1f)
         };

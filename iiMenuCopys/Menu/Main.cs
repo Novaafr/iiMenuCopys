@@ -127,25 +127,7 @@ namespace iiMenu.Menu
                 if (buttonCondition && menu == null)
                 {
                     Draw();
-                    if (reference == null)
-                    {
-                        reference = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        if (rightHand || (bothHands && EasyInputs.GetSecondaryButtonDown(EasyHand.RightHand)))
-                        {
-                            reference.transform.parent = GorillaTagger.Instance.leftHandTransform;
-                        }
-                        else
-                        {
-                            reference.transform.parent = GorillaTagger.Instance.rightHandTransform;
-                        }
-                        if (hidePointer)
-                            reference.GetComponent<Renderer>().enabled = false;
-                        else
-                            reference.GetComponent<Renderer>().material.color = bgColorA;
-                        reference.transform.localPosition = Settings.makeThisThePointerPos;
-                        reference.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
-                        buttonCollider = reference.GetComponent<SphereCollider>();
-                    }
+                    CreateReference();
                 }
                 else
                 {
@@ -1252,6 +1234,20 @@ namespace iiMenu.Menu
             component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
         }
 
+
+        public static void CreateReference()
+        {
+            reference = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            reference.transform.parent = rightHand || (bothHands && ControllerInputPoller.instance.rightControllerSecondaryButton) ? GorillaTagger.Instance.leftHandTransform : GorillaTagger.Instance.rightHandTransform;
+            reference.transform.localPosition = new Vector3(0.013f, -0.025f, 0.1f);
+            reference.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
+            buttonCollider = reference.GetComponent<SphereCollider>();
+
+            if (hidePointer)
+                reference.GetComponent<Renderer>().enabled = false;
+            else
+                reference.GetComponent<Renderer>().material.color = bgColorA;
+        }
         public static void Draw()
         {
             menu = GameObject.CreatePrimitive(PrimitiveType.Cube);
