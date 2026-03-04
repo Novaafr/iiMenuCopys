@@ -1,51 +1,76 @@
 ﻿using System;
 using UnityEngine;
-using static iiMenu.Menu.Main;
+using UnityEngine.UI;
 
 namespace iiMenu.Classes
 {
     [MelonLoader.RegisterTypeInIl2Cpp]
-    public class ColorChanger : TimedBehaviour
+    public class ColorChanger : MonoBehaviour
     {
-        public ColorChanger(IntPtr ptr) : base(ptr) { }
-        public override void Start()
+        public ColorChanger(IntPtr e) : base(e) { }
+        public virtual void Start()
         {
-            base.Start();
-            this.gameObjectRenderer = base.GetComponent<Renderer>();
-            this.Update();
-        }
-
-        public override void Update()
-        {
-            base.Update();
-            if (this.colors != null)
+            if (colors == null)
             {
-                if (!this.isMonkeColors)
-                {
-                    if (this.timeBased)
-                    {
-                        //this.color = this.colors.Evaluate(this.progress);
-                        this.color = this.colors.Evaluate((Time.time / 2f) % 1);
-                    }
-                    if (this.isRainbow)
-                    {
-                        float h = (Time.frameCount / 180f) % 1f;
-                        this.color = UnityEngine.Color.HSVToRGB(h, 1f, 1f);
-                    }
-                    this.gameObjectRenderer.material.color = this.color;
-                }
-                else
-                {
-                    this.gameObjectRenderer.material = GorillaTagger.Instance.myVRRig.mainSkin.material;
-                }
+                Destroy(this);
+                return;
             }
+
+            targetRenderer = GetComponent<Renderer>();
+
+            if (colors.IsFlat())
+            {
+                Update();
+                Destroy(this);
+                return;
+            }
+
+            Update();
         }
 
-        public Renderer gameObjectRenderer;
-        public Gradient colors = null;
-        public Color32 color;
-        public bool timeBased = true;
-        public bool isRainbow = false;
-        public bool isMonkeColors = false;
+        public virtual void Update()
+        {
+            targetRenderer.enabled = overrideTransparency ?? !colors.transparent;
+
+            if (colors.transparent)
+                return;
+
+            targetRenderer.material.color = colors.GetCurrentColor();
+        }
+
+        public Renderer targetRenderer;
+        public ExtGradient colors;
+        public bool? overrideTransparency;
+    }
+
+    [MelonLoader.RegisterTypeInIl2Cpp]
+    public class TextColorChanger : MonoBehaviour
+    {
+        public TextColorChanger(IntPtr e) : base(e) { }
+        public virtual void Start()
+        {
+            if (colors == null)
+            {
+                Destroy(this);
+                return;
+            }
+
+            targetText = gameObject.GetComponent<Text>();
+
+            if (colors.IsFlat())
+            {
+                Update();
+                Destroy(this);
+                return;
+            }
+
+            Update();
+        }
+
+        public virtual void Update() =>
+            targetText.color = colors.GetCurrentColor();
+
+        public Text targetText;
+        public ExtGradient colors;
     }
 }

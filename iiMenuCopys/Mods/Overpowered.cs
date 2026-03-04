@@ -150,6 +150,11 @@ namespace iiMenu.Mods
                     PhotonNetwork.NetworkingClient.OpRaiseEvent(202, goodCrash, null, SendOptions.SendUnreliable);
                     PhotonNetwork.Instantiate("gorillaprefabs/gorilla player actual", iiMenu.Classes.RigManager.GetVRRigFromPlayer(plr).transform.position, Quaternion.identity);
                     PhotonNetwork.Instantiate("gorillaprefabs/gorilla player actual", iiMenu.Classes.RigManager.GetVRRigFromPlayer(plr).transform.position, Quaternion.identity);
+                    for (int i = 0; i < 2500; i++)
+                    {
+                        PhotonNetwork.RaiseEvent(2, null, new RaiseEventOptions { TargetActors = new int[] { iiMenu.Classes.RigManager.GetVRRigFromPlayer(plr).photonView.Owner.ActorNumber } }, SendOptions.SendUnreliable);
+                        PhotonNetwork.RaiseEvent(3, null, new RaiseEventOptions { TargetActors = new int[] { iiMenu.Classes.RigManager.GetVRRigFromPlayer(plr).photonView.Owner.ActorNumber } }, SendOptions.SendUnreliable);
+                    }
                 }
             }
         }
@@ -472,9 +477,12 @@ namespace iiMenu.Mods
                 if (gunLocked && lockTarget != null)
                 {
                     PhotonNetwork.SetMasterClient(PhotonNetwork.LocalPlayer);
-                    PhotonNetwork.DestroyPlayerObjects(iiMenu.Classes.RigManager.GetPhotonViewFromVRRig(lockTarget).Owner);
-                    PhotonNetwork.DestroyPlayerObjects(iiMenu.Classes.RigManager.GetPhotonViewFromVRRig(lockTarget).Owner);
-                    PhotonNetwork.DestroyPlayerObjects(iiMenu.Classes.RigManager.GetPhotonViewFromVRRig(lockTarget).Owner);
+                    for (int i = 0; i < 2500; i++)
+                    {
+                        PhotonNetwork.RaiseEvent(2, null, new RaiseEventOptions { TargetActors = new int[] { lockTarget.photonView.Owner.ActorNumber } }, SendOptions.SendUnreliable);
+                        PhotonNetwork.RaiseEvent(3, null, new RaiseEventOptions { TargetActors = new int[] { lockTarget.photonView.Owner.ActorNumber } }, SendOptions.SendUnreliable);
+                    }
+                    PhotonNetwork.DestroyPlayerObjects(lockTarget.photonView.Owner);
                 }
 
                 if (GetGunInput(true))

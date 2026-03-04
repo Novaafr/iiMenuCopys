@@ -37,8 +37,9 @@
     <Compile Include="Classes\ColorChanger.cs" />
     <Compile Include="Classes\ExtGradient.cs" />
     <Compile Include="Classes\FixedColliders.cs" />
+    <Compile Include="Classes\ImageColorChanger.cs" />
     <Compile Include="Classes\RigManager.cs" />
-    <Compile Include="Classes\TimedBehaviour.cs" />
+    <Compile Include="Extenstions\ComponentExtensions.cs" />
     <Compile Include="Menu\Buttons.cs" />
     <Compile Include="Menu\Main.cs" />
     <Compile Include="Mods\Advantages.cs" />

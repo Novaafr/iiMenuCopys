@@ -9,7 +9,6 @@ using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,11 +16,12 @@ using System.Reflection;
 using UnhollowerRuntimeLib;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using static iiMenu.Mods.Reconnect;
+using static UnityEngine.UIElements.TextField;
+using Button = iiMenu.Classes.Button;
 using Image = UnityEngine.UI.Image;
-
 
 /*
  *  HEY SKIDDERS
@@ -43,6 +43,9 @@ namespace iiMenu.Menu
         [Obsolete]
         public override void OnApplicationStart()
         {
+            ClassInjector.RegisterTypeInIl2Cpp<TextColorChanger>();
+            ClassInjector.RegisterTypeInIl2Cpp<ImageColorChanger>();
+            ClassInjector.RegisterTypeInIl2Cpp<ColorChanger>();
             ClassInjector.RegisterTypeInIl2Cpp<RigManager>();
             ClassInjector.RegisterTypeInIl2Cpp<iiMenu.Classes.Button>();
 
@@ -183,13 +186,6 @@ namespace iiMenu.Menu
 
                     try
                     {
-                        GradientColorKey[] array = new GradientColorKey[3];
-                        array[0] = new GradientColorKey(bgColorA, 0f);
-                        array[1] = new GradientColorKey(bgColorB, 0.5f);
-                        array[2] = new GradientColorKey(bgColorA, 1f);
-
-                        Gradient bg = new Gradient { colorKeys = array };
-
                         if (themeType == 6)
                         {
                             float h = (Time.frameCount / 180f) % 1f;
@@ -197,7 +193,7 @@ namespace iiMenu.Menu
                         }
                         else
                         {
-                            OrangeUI.color = bg.Evaluate((Time.time / 2f) % 1f);
+                            OrangeUI.color = backgroundColor.GetCurrentColor();
                         }
                         GameObject.Find("motd").GetComponent<Text>().supportRichText = true;
                         GameObject.Find("motdtext").GetComponent<Text>().supportRichText = true;
@@ -381,94 +377,6 @@ namespace iiMenu.Menu
                     else
                     {
                         lastOwner = false;
-                    }
-
-                    if (isUpdatingValues)
-                    {
-                        if (Time.time > valueChangeDelay)
-                        //if (GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(PhotonNetwork.LocalPlayer.UserId))
-                        {
-                            try
-                            {
-                                if (changingName)
-                                {
-                                    try
-                                    {
-                                        GorillaComputer.instance.currentName = nameChange;
-                                        PhotonNetwork.LocalPlayer.NickName = nameChange;
-                                        GorillaComputer.instance.offlineVRRigNametagText.text = nameChange;
-                                        GorillaComputer.instance.savedName = nameChange;
-                                        PlayerPrefs.SetString("playerName", nameChange);
-                                        PlayerPrefs.Save();
-                                    }
-                                    catch (Exception exception)
-                                    {
-                                        UnityEngine.Debug.LogError(string.Format("iiMenu <b>NAME ERROR</b> {1} - {0}", exception.Message, exception.StackTrace));
-                                    }
-
-                                    if (!changingColor)
-                                    {
-                                        try
-                                        {
-                                            PlayerPrefs.SetFloat("redValue", Mathf.Clamp(GorillaTagger.Instance.myVRRig.mainSkin.material.color.r, 0f, 1f));
-                                            PlayerPrefs.SetFloat("greenValue", Mathf.Clamp(GorillaTagger.Instance.myVRRig.mainSkin.material.color.g, 0f, 1f));
-                                            PlayerPrefs.SetFloat("blueValue", Mathf.Clamp(GorillaTagger.Instance.myVRRig.mainSkin.material.color.b, 0f, 1f));
-
-                                            //GorillaTagger.Instance.myVRRig.mainSkin.material.color = GorillaTagger.Instance.myVRRig.mainSkin.material.color;
-                                            GorillaTagger.Instance.UpdateColor(GorillaTagger.Instance.myVRRig.mainSkin.material.color.r, GorillaTagger.Instance.myVRRig.mainSkin.material.color.g, GorillaTagger.Instance.myVRRig.mainSkin.material.color.b);
-                                            PlayerPrefs.Save();
-
-                                            //GorillaTagger.Instance.myVRRig.RPC("InitializeNoobMaterial", RpcTarget.All, new object[] { GorillaTagger.Instance.myVRRig.mainSkin.material.color.r, GorillaTagger.Instance.myVRRig.mainSkin.material.color.g, GorillaTagger.Instance.myVRRig.mainSkin.material.color.b, false });
-                                            RPCProtection();
-                                        }
-                                        catch (Exception exception)
-                                        {
-                                            UnityEngine.Debug.LogError(string.Format("iiMenu <b>COLOR ERROR</b> {1} - {0}", exception.Message, exception.StackTrace));
-                                        }
-                                    }
-                                }
-
-                                if (changingColor)
-                                {
-                                    try
-                                    {
-                                        PlayerPrefs.SetFloat("redValue", Mathf.Clamp(colorChange.r, 0f, 1f));
-                                        PlayerPrefs.SetFloat("greenValue", Mathf.Clamp(colorChange.g, 0f, 1f));
-                                        PlayerPrefs.SetFloat("blueValue", Mathf.Clamp(colorChange.b, 0f, 1f));
-
-                                        //GorillaTagger.Instance.myVRRig.mainSkin.material.color = colorChange;
-                                        GorillaTagger.Instance.UpdateColor(colorChange.r, colorChange.g, colorChange.b);
-                                        PlayerPrefs.Save();
-
-                                        //GorillaTagger.Instance.myVRRig.RPC("InitializeNoobMaterial", RpcTarget.All, new object[] { colorChange.r, colorChange.g, colorChange.b, false });
-                                        RPCProtection();
-                                    }
-                                    catch (Exception exception)
-                                    {
-                                        UnityEngine.Debug.LogError(string.Format("iiMenu <b>COLOR ERROR</b> {1} - {0}", exception.Message, exception.StackTrace));
-                                    }
-                                }
-                            }
-                            catch (Exception exception)
-                            {
-                                UnityEngine.Debug.LogError(string.Format("iiMenu <b>CHANGE ERROR</b> {1} - {0}", exception.Message, exception.StackTrace));
-                            }
-                            GorillaTagger.Instance.myVRRig.enabled = true;
-                            changingName = false;
-                            changingColor = false;
-
-                            nameChange = "";
-                            colorChange = Color.black;
-
-                            isUpdatingValues = false;
-                        }
-                        else
-                        {
-                            GorillaTagger.Instance.myVRRig.enabled = false;
-
-                            GorillaTagger.Instance.myVRRig.transform.position = GorillaComputer.instance.friendJoinCollider.transform.position;
-                            GorillaTagger.Instance.myVRRig.transform.position = GorillaComputer.instance.friendJoinCollider.transform.position;
-                        }
                     }
 
                     rightPrimary = EasyInputs.GetPrimaryButtonDown(EasyHand.RightHand);
@@ -738,6 +646,7 @@ namespace iiMenu.Menu
         public static bool disableNotifications = false;
         public static bool highQualityText = false;
         public static bool hidePointer = false;
+        public static bool incrementalButtons = true;
 
         public static int pageSize = 6;
 
@@ -858,21 +767,61 @@ namespace iiMenu.Menu
             4, 3, 5, 4, 19, 18, 20, 19, 3, 18, 21, 20, 22, 21, 25, 21, 29, 21, 31, 29, 27, 25, 24, 22, 6, 5, 7, 6, 10, 6, 14, 6, 16, 14, 12, 10, 9, 7
         };
 
-        public static Color bgColorA = new Color32(255, 128, 0, 128);
+        public static int arrowType;
+        public static string[][] arrowTypes = new string[][] // http://xahlee.info/comp/unicode_index.html
+        {
+            new string[] {"<", ">"},
+            new string[] {"←", "→"},
+            new string[] {"↞", "↠"},
+            new string[] {"◄", "►"},
+            new string[] {"〈 ", " 〉"},
+            new string[] {"‹", "›"},
+            new string[] {"«", "»"},
+            new string[] {"◀", "▶"},
+            new string[] {"-", "+"},
+            new string[] {"", ""},
+            new string[] {"v", "ʌ"},
+            new string[] { "v\nv\nv\nv\nv\nv", "ʌ\nʌ\nʌ\nʌ\nʌ\nʌ" }
+        };
 
-        public static Color bgColorB = new Color32(255, 102, 0, 128);
+        public static ExtGradient backgroundColor = new ExtGradient
+        {
+            colors = ExtGradient.GetSimpleGradient(
+                 new Color32(255, 128, 0, 128),
+                 new Color32(255, 102, 0, 128)
+             )
+        };
 
-        public static Color buttonDefaultA = new Color32(170, 85, 0, 255);
+        public static ExtGradient[] buttonColors = new[]
+        {
+            new ExtGradient // Released
+            {
+                colors = ExtGradient.GetSolidGradient(new Color32(170, 85, 0, 255))
+            },
 
-        public static Color buttonDefaultB = new Color32(170, 85, 0, 255);
+            new ExtGradient // Pressed
+            {
+                colors = ExtGradient.GetSolidGradient(new Color32(85, 42, 0, 255))
+            }
+        };
 
-        public static Color buttonClickedA = new Color32(85, 42, 0, 255);
+        public static ExtGradient[] textColors = new[]
+        {
+            new ExtGradient // Title
+            {
+                colors = ExtGradient.GetSolidGradient(new Color32(255, 190, 125, 255))
+            },
 
-        public static Color buttonClickedB = new Color32(85, 42, 0, 255);
+            new ExtGradient // Button Released
+            {
+                colors = ExtGradient.GetSolidGradient(new Color32(255, 190, 125, 255))
+            },
+            new ExtGradient // Button Clicked
+            {
+                colors = ExtGradient.GetSolidGradient(new Color32(255, 190, 125, 255))
+            }
+        };
 
-        public static Color textColor = new Color32(255, 190, 125, 255);
-
-        public static Color colorChange = Color.black;
 
         public static AssetBundle assetBundle = null;
 
@@ -953,6 +902,7 @@ namespace iiMenu.Menu
         public static int tindex = 1;
 
         public static bool thinmenu = true;
+        public static bool hidetitle = false;
 
         public static bool longmenu = false;
         public static bool flipMenu = false;
@@ -1008,7 +958,7 @@ namespace iiMenu.Menu
             GameObject GunPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             GunPointer.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
             GameObject.Destroy(GunPointer.GetComponent<Collider>());
-            GunPointer.GetComponent<Renderer>().material.color = GetGunInput(true) ? bgColorB : bgColorA;
+            GunPointer.GetComponent<Renderer>().material.color = GetGunInput(true) ? backgroundColor.GetColor(1) : backgroundColor.GetColor(0);
             GunPointer.GetComponent<Renderer>().material.shader = Shader.Find("GUI/Text Shader");
             GunPointer.transform.position = gunLocked ? lockTarget.transform.position : Ray.point;
             GunLine = GunPointer.AddComponent<LineRenderer>();
@@ -1017,8 +967,8 @@ namespace iiMenu.Menu
             GunLine.material.shader = Shader.Find("GUI/Text Shader");
             GunLine.startWidth = 0.02f;
             GunLine.endWidth = 0.02f;
-            GunLine.startColor = GetGunInput(true) ? bgColorB : bgColorA;
-            GunLine.endColor = GetGunInput(true) ? bgColorB : bgColorA;
+            GunLine.startColor = GetGunInput(true) ? backgroundColor.GetColor(1) : backgroundColor.GetColor(0);
+            GunLine.endColor = GetGunInput(true) ? backgroundColor.GetColor(1) : backgroundColor.GetColor(0);
             GunLine.SetPosition(0, gunTransform.position);
             GunLine.SetPosition(1, gunLocked ? lockTarget.transform.position : GunPointer.transform.position);
             GameObject.Destroy(GunPointer, Time.deltaTime);
@@ -1053,17 +1003,9 @@ namespace iiMenu.Menu
 
         public static bool isRightHand = false;
 
-        public static bool isUpdatingValues = false;
-
-        public static float valueChangeDelay = 0f;
-
-        public static bool changingName = false;
-
         public static Color currentProjectileColor = Color.white;
 
         public static GameObject toget = null;
-
-        public static bool changingColor = false;
 
         public static string nameChange = "";
 
@@ -1103,136 +1045,268 @@ namespace iiMenu.Menu
 
         private static void AddButton(float offset, int buttonIndex, ButtonInfo method)
         {
-            GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-            UnityEngine.Object.Destroy(gameObject.GetComponent<Rigidbody>());
-            gameObject.GetComponent<BoxCollider>().isTrigger = true;
-            gameObject.transform.parent = menu.transform;
-            gameObject.transform.rotation = Quaternion.identity;
-            if (thinmenu)
-                gameObject.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
-            else
-                gameObject.transform.localScale = new Vector3(0.09f, 1.3f, 0.08f);
-            
-            if (longmenu && buttonIndex >= pageSize)
+            if (!method.label)
             {
-                menuBackground.transform.localScale += new Vector3(0f, 0f, 0.1f);
-                menuBackground.transform.localPosition += new Vector3(0f, 0f, -0.05f);
-            }
+                GameObject buttonObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-            gameObject.transform.localPosition = new Vector3(0.56f, 0f, 0.28f - offset);
-            gameObject.AddComponent<Classes.Button>().relatedText = method.buttonText;
+                if (themeType == 63 && buttonIndex >= 0)
+                    buttonObject.GetComponent<Renderer>().enabled = false;
 
-            GradientColorKey[] pressedColors = new GradientColorKey[3];
-            pressedColors[0].color = buttonClickedA;
-            pressedColors[0].time = 0f;
-            pressedColors[1].color = buttonClickedB;
-            pressedColors[1].time = 0.5f;
-            pressedColors[2].color = buttonClickedA;
-            pressedColors[2].time = 1f;
+                buttonObject.GetComponent<BoxCollider>().isTrigger = true;
+                buttonObject.transform.parent = menu.transform;
+                buttonObject.transform.rotation = Quaternion.identity;
 
-            GradientColorKey[] releasedColors = new GradientColorKey[3];
-            releasedColors[0].color = buttonDefaultA;
-            releasedColors[0].time = 0f;
-            releasedColors[1].color = buttonDefaultB;
-            releasedColors[1].time = 0.5f;
-            releasedColors[2].color = buttonDefaultA;
-            releasedColors[2].time = 1f;
-
-            GradientColorKey[] favoriteColors = new GradientColorKey[3];
-            favoriteColors[0].color = new Color32(252, 186, 3, 255);
-            favoriteColors[0].time = 0f;
-            favoriteColors[1].color = new Color32(252, 197, 36, 255);
-            favoriteColors[1].time = 0.5f;
-            favoriteColors[2].color = new Color32(252, 186, 3, 255);
-            favoriteColors[2].time = 1f;
-
-            GradientColorKey[] favoriteColorsEnabled = new GradientColorKey[3];
-            favoriteColorsEnabled[0].color = new Color32(126, 93, 3, 255);
-            favoriteColorsEnabled[0].time = 0f;
-            favoriteColorsEnabled[1].color = new Color32(126, 99, 36, 255);
-            favoriteColorsEnabled[1].time = 0.5f;
-            favoriteColorsEnabled[2].color = new Color32(126, 93, 3, 255);
-            favoriteColorsEnabled[2].time = 1f;
-
-            ColorChanger colorChanger = gameObject.AddComponent<ColorChanger>();
-            if (method.enabled)
-            {
-                colorChanger.isRainbow = themeType == 6;
-                colorChanger.isMonkeColors = themeType == 8;
-                colorChanger.colors = new Gradient
-                {
-                    colorKeys = pressedColors
-                };
-            }
-            else
-            {
-                colorChanger.isRainbow = false;
-                colorChanger.isMonkeColors = false;
-                colorChanger.colors = new Gradient
-                {
-                    colorKeys = releasedColors
-                };
-            }
-            if (favorites.Contains(method.buttonText))
-            {
-                colorChanger.isRainbow = false;
-                colorChanger.isMonkeColors = false;
-                if (method.enabled)
-                {
-                    colorChanger.colors = new Gradient
-                    {
-                        colorKeys = favoriteColorsEnabled
-                    };
-                }
+                if (thinmenu)
+                    buttonObject.transform.localScale = new Vector3(0.09f, 0.9f, 0.1f * 0.8f);
                 else
+                    buttonObject.transform.localScale = new Vector3(0.09f, 1.3f, 0.1f * 0.8f);
+
+                if (longmenu && buttonIndex >= pageSize)
                 {
-                    colorChanger.colors = new Gradient
-                    {
-                        colorKeys = favoriteColors
-                    };
+                    menuBackground.transform.localScale += new Vector3(0f, 0f, 0.1f);
+                    menuBackground.transform.localPosition += new Vector3(0f, 0f, -0.05f);
                 }
+
+                buttonObject.transform.localPosition = new Vector3(0.56f, 0f, 0.28f - offset);
+
+                Button Button = buttonObject.AddComponent<Button>();
+                Button.relatedText = method.buttonText;
+
+                if (incrementalButtons)
+                {
+                    if (method.incremental)
+                    {
+                        Button.incremental = true;
+                        Button.positive = false;
+
+                        buttonObject.transform.localScale -= new Vector3(0f, 0.254f, 0f);
+                        GameObject.Destroy(Button);
+
+                        RenderIncrementalButton(false, offset, buttonIndex, method);
+                        RenderIncrementalButton(true, offset, buttonIndex, method);
+                    }
+                }
+
+                ColorChanger colorChanger = buttonObject.AddComponent<ColorChanger>();
+                colorChanger.colors = buttonColors[method.enabled ? 1 : 0];
             }
-            colorChanger.Start();
-            Text text2 = new GameObject
+
+            Text buttonText = new GameObject
             {
                 transform =
                 {
                     parent = canvasObj.transform
                 }
             }.AddComponent<Text>();
-            text2.font = activeFont;
-            text2.text = method.buttonText;
+
+            buttonText.font = activeFont;
+            buttonText.text = method.buttonText;
+
             if (method.overlapText != null)
+                buttonText.text = method.overlapText;
+
+            if (method.customBind != null)
             {
-                text2.text = method.overlapText;
+                if (buttonText.text.Contains("</color><color=grey>]</color>"))
+                    buttonText.text = buttonText.text.Replace("</color><color=grey>]</color>", $"/{method.customBind}</color><color=grey>]</color>");
+                else
+                    buttonText.text += $" <color=grey>[</color><color=green>{method.customBind}</color><color=grey>]</color>";
             }
 
             if (lowercaseMode)
-                text2.text = text2.text.ToLower();
+                buttonText.text = buttonText.text.ToLower();
 
             if (uppercaseMode)
-                text2.text = text2.text.ToUpper();
+                buttonText.text = buttonText.text.ToUpper();
 
             if (favorites.Contains(method.buttonText))
-                text2.text += " ✦";
+                buttonText.text += " ✦";
 
-            text2.supportRichText = true;
-            text2.fontSize = 1;
-            text2.color = textColor;
-            if (favorites.Contains(method.buttonText))
+            buttonText.supportRichText = true;
+            buttonText.fontSize = 1;
+
+            buttonText.AddComponent<TextColorChanger>().colors = textColors[method.enabled ? 2 : 1];
+
+            buttonText.alignment = TextAnchor.MiddleCenter;
+            buttonText.fontStyle = FontStyle.Italic;
+            buttonText.resizeTextForBestFit = true;
+            buttonText.resizeTextMinSize = 0;
+
+            RectTransform textTransform = buttonText.GetComponent<RectTransform>();
+            textTransform.localPosition = Vector3.zero;
+            textTransform.sizeDelta = new Vector2(method.incremental && incrementalButtons ? .18f : .2f, .03f * (0.1f / 0.1f));
+
+            textTransform.localPosition = new Vector3(.064f, 0, .111f - offset / 2.6f);
+            textTransform.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+        }
+
+
+        private static void CreatePageButtonPair(string prevButtonName, string nextButtonName, Vector3 buttonScale, Vector3 prevButtonPos, Vector3 nextButtonPos, Vector3 prevTextPos, Vector3 nextTextPos, ExtGradient color, Vector2? textSize = null)
+        {
+            GameObject prevButton = AdvancedAddButton(prevButtonName, buttonScale, prevButtonPos, prevTextPos, color, textSize, 0);
+            GameObject nextButton = AdvancedAddButton(nextButtonName, buttonScale, nextButtonPos, nextTextPos, color, textSize, 1);
+        }
+
+        private static void RenderIncrementalButton(bool increment, float offset, int buttonIndex, ButtonInfo method)
+        {
+            if (!method.label)
             {
-                text2.color = Color.black;
+                GameObject buttonObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+                buttonObject.GetComponent<BoxCollider>().isTrigger = true;
+                buttonObject.transform.parent = menu.transform;
+                buttonObject.transform.rotation = Quaternion.identity;
+
+                buttonObject.transform.localScale = new Vector3(0.09f, 0.102f, 0.1f * 0.8f);
+                if (thinmenu)
+                    buttonObject.transform.localPosition = new Vector3(0.56f, 0.399f, 0.28f - offset);
+                else
+                    buttonObject.transform.localPosition = new Vector3(0.56f, 0.599f, 0.28f - offset);
+
+                Button Button = buttonObject.AddComponent<Button>();
+                Button.relatedText = method.buttonText;
+                Button.incremental = true;
+                Button.positive = increment;
+
+                ColorChanger colorChanger = buttonObject.AddComponent<ColorChanger>();
+                colorChanger.colors = buttonColors[0];
+
+                ExtGradient grad = backgroundColor.Clone();
+                colorChanger.colors = grad;
+
+                if (increment)
+                    buttonObject.transform.localPosition = new Vector3(buttonObject.transform.localPosition.x, -buttonObject.transform.localPosition.y, buttonObject.transform.localPosition.z);
             }
-            text2.alignment = TextAnchor.MiddleCenter;
-            text2.fontStyle = FontStyle.Italic;
-            text2.resizeTextForBestFit = true;
-            text2.resizeTextMinSize = 0;
-            RectTransform component = text2.GetComponent<RectTransform>();
-            component.localPosition = Vector3.zero;
-            component.sizeDelta = new Vector2(.2f, .03f);
-            component.localPosition = new Vector3(.064f, 0, .111f - offset / 2.6f);
-            component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+
+            RenderIncrementalText(increment, offset);
+        }
+
+        private static void AddReturnButton(bool offcenteredPosition)
+        {
+            GameObject buttonObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            buttonObject.GetComponent<BoxCollider>().isTrigger = true;
+            buttonObject.transform.parent = menu.transform;
+            buttonObject.transform.rotation = Quaternion.identity;
+
+            buttonObject.transform.localScale = new Vector3(0.09f, 0.102f, 0.08f);
+            // Fat menu theorem
+            // To get the fat position of a button:
+            // original x * (0.7 / 0.45) or 1.555555556
+            if (thinmenu)
+                buttonObject.transform.localPosition = new Vector3(0.56f, -0.450f, -0.58f);
+            else
+                buttonObject.transform.localPosition = new Vector3(0.56f, -0.7f, -0.58f);
+
+            if (offcenteredPosition)
+                buttonObject.transform.localPosition += new Vector3(0f, 0.16f, 0f);
+
+            buttonObject.AddComponent<Button>().relatedText = "Global Return";
+
+            ColorChanger colorChanger = buttonObject.AddComponent<ColorChanger>();
+            colorChanger.colors = colorChanger.colors = buttonColors[0];
+
+            Image returnImage = new GameObject
+            {
+                transform =
+                {
+                    parent = canvasObj.transform
+                }
+            }.AddComponent<Image>();
+
+            if (returnIcon == null)
+                returnIcon = LoadTextureFromResource("iiMenuCopys.Resources.return.png");
+
+            if (returnMat == null)
+                returnMat = new Material(returnImage.material);
+
+            returnImage.material = returnMat;
+            returnImage.material.SetTexture("_MainTex", returnIcon);
+            returnImage.AddComponent<ImageColorChanger>().colors = textColors[1];
+
+            RectTransform imageTransform = returnImage.GetComponent<RectTransform>();
+            imageTransform.localPosition = Vector3.zero;
+            imageTransform.sizeDelta = new Vector2(.03f, .03f);
+
+            if (thinmenu)
+                imageTransform.localPosition = new Vector3(.064f, -0.35f / 2.6f, -0.58f / 2.6f);
+            else
+                imageTransform.localPosition = new Vector3(.064f, -0.54444444444f / 2.6f, -0.58f / 2.6f);
+
+            if (offcenteredPosition)
+                imageTransform.localPosition += new Vector3(0f, 0.0475f, 0f);
+
+            imageTransform.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+        }
+
+
+        public static void RenderIncrementalText(bool increment, float offset)
+        {
+            Text buttonText = new GameObject
+            {
+                transform =
+                {
+                    parent = canvasObj.transform
+                }
+            }.AddComponent<Text>();
+
+            buttonText.font = activeFont;
+            buttonText.text = increment ? "+" : "-";
+            buttonText.supportRichText = true;
+            buttonText.fontSize = 1;
+            buttonText.AddComponent<TextColorChanger>().colors = textColors[1];
+
+            buttonText.alignment = TextAnchor.MiddleCenter;
+            buttonText.fontStyle = FontStyle.Italic;
+            buttonText.resizeTextForBestFit = true;
+            buttonText.resizeTextMinSize = 0;
+
+            RectTransform textTransform = buttonText.GetComponent<RectTransform>();
+            textTransform.localPosition = Vector3.zero;
+            textTransform.sizeDelta = new Vector2(.2f, .03f * (0.1f / 0.1f));
+
+            if (thinmenu)
+                textTransform.localPosition = new Vector3(.064f, increment ? -0.12f : 0.12f, .111f - offset / 2.6f);
+            else
+                textTransform.localPosition = new Vector3(.064f, increment ? -0.18f : 0.18f, .111f - offset / 2.6f);
+            textTransform.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+        }
+
+        private static GameObject AdvancedAddButton(string buttonName, Vector3 scale, Vector3 position, Vector3 textPosition, ExtGradient color, Vector2? textSize, int arrowIndex)
+        {
+            GameObject button = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            button.GetComponent<BoxCollider>().isTrigger = true;
+            button.transform.parent = menu.transform;
+            button.transform.rotation = Quaternion.identity;
+            button.transform.localScale = scale;
+            button.transform.localPosition = position;
+
+            button.AddComponent<Button>().relatedText = buttonName;
+
+            ColorChanger colorChanger = button.AddComponent<ColorChanger>();
+            colorChanger.colors = color;
+
+            Text text = new GameObject { transform = { parent = canvasObj.transform } }.AddComponent<Text>();
+            text.font = activeFont;
+            text.text = arrowTypes[arrowType][arrowIndex];
+            text.fontSize = 1;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 0;
+
+            text.AddComponent<TextColorChanger>().colors = textColors[1];
+
+            RectTransform textRect = text.GetComponent<RectTransform>();
+            textRect.sizeDelta = textSize ?? new Vector2(0.2f, 0.03f);
+
+            if (arrowType == 11)
+                textRect.sizeDelta = new Vector2(textRect.sizeDelta.x, textRect.sizeDelta.y * 6f);;
+
+            textRect.localPosition = textPosition;
+            textRect.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+
+            return button;
         }
 
 
@@ -1240,80 +1314,77 @@ namespace iiMenu.Menu
         {
             reference = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             reference.transform.parent = rightHand || (bothHands && EasyInputs.GetSecondaryButtonDown(EasyHand.RightHand)) ? GorillaTagger.Instance.leftHandTransform : GorillaTagger.Instance.rightHandTransform;
-            reference.transform.localPosition = new Vector3(0.013f, -0.025f, 0.1f);
+            reference.transform.localPosition = Settings.makeThisThePointerPos;
             reference.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
             buttonCollider = reference.GetComponent<SphereCollider>();
 
             if (hidePointer)
                 reference.GetComponent<Renderer>().enabled = false;
             else
-                reference.GetComponent<Renderer>().material.color = bgColorA;
+            {
+                ColorChanger colorChanger = reference.AddComponent<ColorChanger>();
+                colorChanger.colors = backgroundColor;
+            }
         }
         public static void Draw()
         {
             menu = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            UnityEngine.Object.Destroy(menu.GetComponent<Rigidbody>());
-            UnityEngine.Object.Destroy(menu.GetComponent<BoxCollider>());
-            UnityEngine.Object.Destroy(menu.GetComponent<Renderer>());
+
+            GameObject.Destroy(menu.GetComponent<BoxCollider>());
+            GameObject.Destroy(menu.GetComponent<Renderer>());
+
             menu.transform.localScale = new Vector3(0.1f, 0.3f, 0.3825f);
+
             if (annoyingMode)
             {
-                menu.transform.localScale = new Vector3(0.1f, UnityEngine.Random.Range(10, 40) / 100f, 0.3825f);
-                bgColorA = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
-                bgColorB = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
-                textColor = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
-                buttonClickedA = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
-                buttonClickedB = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
-                buttonDefaultA = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
-                buttonDefaultB = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
+                menu.transform.localScale = new Vector3(0.1f, UnityEngine.Random.Range(10f, 40f) / 100f, 0.3825f);
+                backgroundColor = new ExtGradient { colors = ExtGradient.GetSimpleGradient(ExtGradient.RandomColor(), ExtGradient.RandomColor()) };
+
+                buttonColors[0] = new ExtGradient { colors = ExtGradient.GetSimpleGradient(ExtGradient.RandomColor(), ExtGradient.RandomColor()) };
+                buttonColors[1] = new ExtGradient { colors = ExtGradient.GetSimpleGradient(ExtGradient.RandomColor(), ExtGradient.RandomColor()) };
+
+                textColors[0] = new ExtGradient { colors = ExtGradient.GetSimpleGradient(ExtGradient.RandomColor(), ExtGradient.RandomColor()) };
+                textColors[1] = new ExtGradient { colors = ExtGradient.GetSimpleGradient(ExtGradient.RandomColor(), ExtGradient.RandomColor()) };
+                textColors[2] = new ExtGradient { colors = ExtGradient.GetSimpleGradient(ExtGradient.RandomColor(), ExtGradient.RandomColor()) };
             }
 
-            GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            UnityEngine.Object.Destroy(gameObject.GetComponent<Rigidbody>());
-            UnityEngine.Object.Destroy(gameObject.GetComponent<BoxCollider>());
-            menuBackground = gameObject;
-            gameObject.transform.parent = menu.transform;
-            gameObject.transform.rotation = Quaternion.identity;
+            menuBackground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject.Destroy(menuBackground.GetComponent<BoxCollider>());
 
+            menuBackground.transform.parent = menu.transform;
+            menuBackground.transform.localPosition = new Vector3(0.50f, 0f, 0f);
+            menuBackground.transform.rotation = Quaternion.identity;
+
+            // Size is calculated in depth, width, height
             if (thinmenu)
-                gameObject.transform.localScale = new Vector3(0.1f, 1f, 1f);
+                menuBackground.transform.localScale = new Vector3(0.1f, 1f, 1f);
             else
-                gameObject.transform.localScale = new Vector3(0.1f, 1.5f, 1f);
-            
-            gameObject.GetComponent<Renderer>().material.color = bgColorA;
-            gameObject.transform.position = new Vector3(0.05f, 0f, 0f);
-            GradientColorKey[] array = new GradientColorKey[3];
-            array[0].color = bgColorA;
-            array[0].time = 0f;
-            array[1].color = bgColorB;
-            array[1].time = 0.5f;
-            array[2].color = bgColorA;
-            array[2].time = 1f;
-            ColorChanger colorChanger = gameObject.AddComponent<ColorChanger>();
-            colorChanger.colors = new Gradient
-            {
-                colorKeys = array
-            };
-            colorChanger.isRainbow = themeType == 6;
-            colorChanger.isMonkeColors = themeType == 8;
-            colorChanger.Start();
+                menuBackground.transform.localScale = new Vector3(0.1f, 1.5f, 1f);
+
+            ColorChanger colorChanger = menuBackground.AddComponent<ColorChanger>();
+            colorChanger.colors = backgroundColor;
+
             canvasObj = new GameObject();
             canvasObj.transform.parent = menu.transform;
-            Canvas canvas = canvasObj.AddComponent<Canvas>();
-            CanvasScaler canvasScaler = canvasObj.AddComponent<CanvasScaler>();
-            canvasObj.AddComponent<GraphicRaycaster>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvasScaler.dynamicPixelsPerUnit = highQualityText ? 2500 : 1000f;
 
-            Text text = new GameObject
+            Canvas canvas = canvasObj.AddComponent<Canvas>();
+
+            CanvasScaler canvasScaler = canvasObj.AddComponent<CanvasScaler>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            canvasScaler.dynamicPixelsPerUnit = highQualityText ? 2500f : 1000f;
+
+            canvasObj.AddComponent<GraphicRaycaster>();
+
+            title = new GameObject
             {
                 transform =
                 {
                     parent = canvasObj.transform
                 }
             }.AddComponent<Text>();
-            text.font = activeFont;
-            text.text = $"{PluginInfo.Name} <color=grey>[</color><color=white>" + (pageNumber + 1).ToString() + "</color><color=grey>]</color>".Replace("Stupid", "<b>Stupid</b>");
+            title.font = activeFont;
+            title.text = "ii's <b>Stupid</b> Menu";
+
             if (annoyingMode)
             {
                 string[] randomMenuNames = new string[]
@@ -1324,14 +1395,16 @@ namespace iiMenu.Menu
                     "WM TROLLING MENU",
                     "ShibaGT Dark",
                     "ShibaGT-X v5.5",
+                    "ii stupid",
                     "bvunt menu",
                     "GorillaTaggingKid Menu",
-                    "fart"
+                    "fart",
+                    "steal.lol",
+                    "Unttile menu"
                 };
+
                 if (UnityEngine.Random.Range(1, 5) == 2)
-                {
-                    text.text = randomMenuNames[UnityEngine.Random.Range(0, randomMenuNames.Length - 1)] + " v" + UnityEngine.Random.Range(8, 159);
-                }
+                    title.text = randomMenuNames[UnityEngine.Random.Range(0, randomMenuNames.Length - 1)] + " v" + UnityEngine.Random.Range(8, 159);
             }
 
             if (lowercaseMode)
@@ -1340,19 +1413,22 @@ namespace iiMenu.Menu
             if (uppercaseMode)
                 title.text = title.text.ToUpper();
 
-            text.fontSize = 1;
-            text.color = textColor;
-            title = text;
-            text.supportRichText = true;
-            text.fontStyle = FontStyle.Italic;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.resizeTextForBestFit = true;
-            text.resizeTextMinSize = 0;
-            RectTransform component = text.GetComponent<RectTransform>();
+            if (hidetitle)
+                title.text = "";
+
+            title.fontSize = 1;
+            title.AddComponent<TextColorChanger>().colors = textColors[0];
+
+            title.supportRichText = true;
+            title.fontStyle = FontStyle.Italic;
+            title.alignment = TextAnchor.MiddleCenter;
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = 0;
+            RectTransform component = title.GetComponent<RectTransform>();
             component.localPosition = Vector3.zero;
             component.sizeDelta = new Vector2(0.28f, 0.05f);
 
-            component.position = new Vector3(0.06f, 0f, 0.165f);
+            component.localPosition = new Vector3(0.06f, 0f, 0.165f);
             component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
 
             Text buildLabel = new GameObject
@@ -1363,7 +1439,9 @@ namespace iiMenu.Menu
                 }
             }.AddComponent<Text>();
             buildLabel.font = activeFont;
-            buildLabel.text = $"Build {PluginInfo.Version} : Made My Nova (@novaafr)";
+            buildLabel.text = $"Build {PluginInfo.Version}";
+            if (themeType == 30)
+                buildLabel.text = "";
 
             if (lowercaseMode)
                 buildLabel.text = buildLabel.text.ToLower();
@@ -1372,6 +1450,7 @@ namespace iiMenu.Menu
                 buildLabel.text = buildLabel.text.ToUpper();
 
             buildLabel.fontSize = 1;
+            buildLabel.AddComponent<TextColorChanger>().colors = textColors[0];
             buildLabel.supportRichText = true;
             buildLabel.fontStyle = FontStyle.Italic;
             buildLabel.alignment = TextAnchor.MiddleRight;
@@ -1380,107 +1459,46 @@ namespace iiMenu.Menu
             component = buildLabel.GetComponent<RectTransform>();
             component.localPosition = Vector3.zero;
             component.sizeDelta = new Vector2(0.28f, 0.02f);
-            component.position = thinmenu ? new Vector3(0.04f, 0.0f, -0.17f) : new Vector3(0.04f, 0.07f, -0.17f);
+            if (thinmenu)
+                component.position = new Vector3(0.04f, 0.0f, -0.17f);
+            else
+                component.position = new Vector3(0.04f, 0.07f, -0.17f);
 
             component.rotation = Quaternion.Euler(new Vector3(0f, 90f, 90f));
 
-            if (fpsCounter)
+            Text fps = new GameObject
             {
-                Text fps = new GameObject
-                {
-                    transform =
+                transform =
                 {
                     parent = canvasObj.transform
                 }
-                }.AddComponent<Text>();
-                fps.font = activeFont;
-                fps.text = "FPS: " + (1f / Time.deltaTime).ToString("F1");
+            }.AddComponent<Text>();
+            fps.font = activeFont;
 
-                if (lowercaseMode)
-                    fpsCount.text = fpsCount.text.ToLower();
+            string textToSet = $"FPS: {(1f /Time.deltaTime).ToString("F1")}";
 
-                if (uppercaseMode)
-                    fpsCount.text = fpsCount.text.ToUpper();
+            fps.text = textToSet;
+            if (lowercaseMode)
+                fps.text = fps.text.ToLower();
 
-                fps.color = textColor;
-                fpsCount = fps;
-                fps.fontSize = 1;
-                fps.supportRichText = true;
-                fps.fontStyle = FontStyle.Italic;
-                fps.alignment = TextAnchor.MiddleCenter;
-                fps.horizontalOverflow = UnityEngine.HorizontalWrapMode.Overflow;
-                fps.resizeTextForBestFit = true;
-                fps.resizeTextMinSize = 0;
-                RectTransform component2 = fps.GetComponent<RectTransform>();
-                component2.localPosition = Vector3.zero;
-                component2.sizeDelta = new Vector2(0.28f, 0.02f);
+            if (uppercaseMode)
+                fps.text = fps.text.ToUpper();
 
-                component2.position = new Vector3(0.06f, 0f, 0.135f);
-                component2.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
-            }
+            fps.AddComponent<TextColorChanger>().colors = textColors[0];
+            fpsCount = fps;
+            fps.fontSize = 1;
+            fps.supportRichText = true;
+            fps.fontStyle = FontStyle.Italic;
+            fps.alignment = TextAnchor.MiddleCenter;
+            fps.horizontalOverflow = HorizontalWrapMode.Overflow;
+            fps.resizeTextForBestFit = true;
+            fps.resizeTextMinSize = 0;
+            RectTransform component2 = fps.GetComponent<RectTransform>();
+            component2.localPosition = Vector3.zero;
+            component2.sizeDelta = new Vector2(0.28f, 0.02f);
+            component2.localPosition = new Vector3(0.06f, 0f, hidetitle ? 0.175f : 0.135f);
 
-            if (homeButton)
-            {
-                if (pageButtonType != 0)
-                {
-                    GameObject buttonObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-                    buttonObject.GetComponent<BoxCollider>().isTrigger = true;
-                    buttonObject.transform.parent = menu.transform;
-                    buttonObject.transform.rotation = Quaternion.identity;
-
-                    buttonObject.transform.localScale = new Vector3(0.09f, 0.102f, 0.08f);
-                    // Fat menu theorem
-                    // To get the fat position of a button:
-                    // original x * (0.7 / 0.45) or 1.555555556
-                    buttonObject.transform.localPosition = thinmenu ? new Vector3(0.56f, -0.450f, -0.58f) : new Vector3(0.56f, -0.7f, -0.58f);
-                    //buttonObject.transform.localPosition += new Vector3(0f, 0.16f, 0f);
-
-                    buttonObject.AddComponent<iiMenu.Classes.Button>().relatedText = "returnhome";
-                    GradientColorKey[] array6 = new GradientColorKey[3];
-                    array6[0].color = buttonDefaultA;
-                    array6[0].time = 0f;
-                    array6[1].color = buttonDefaultB;
-                    array6[1].time = 0.5f;
-                    array6[2].color = buttonDefaultA;
-                    array6[2].time = 1f;
-                    ColorChanger colorChanger5 = buttonObject.AddComponent<ColorChanger>();
-                    colorChanger5.colors = new Gradient
-                    {
-                        colorKeys = array6
-                    };
-                    colorChanger5.Start();
-
-                    Image returnImage = new GameObject
-                    {
-                        transform =
-                {
-                    parent = canvasObj.transform
-                }
-                    }.AddComponent<Image>();
-
-                    if (returnIcon == null)
-                        returnIcon = LoadTextureFromResource($"iiMenuCopys.Resources.return.png");
-
-                    if (returnMat == null)
-                        returnMat = new Material(returnImage.material);
-
-                    returnImage.material = returnMat;
-                    returnImage.material.SetTexture("_MainTex", returnIcon);
-                    returnImage.material.color = textColor;
-
-                    RectTransform imageTransform = returnImage.GetComponent<RectTransform>();
-                    imageTransform.localPosition = Vector3.zero;
-                    imageTransform.sizeDelta = new Vector2(.03f, .03f);
-
-                    imageTransform.localPosition = thinmenu ? new Vector3(.064f, -0.35f / 2.6f, -0.58f / 2.6f) : new Vector3(.064f, -0.54444444444f / 2.6f, -0.58f / 2.6f);
-                    //imageTransform.localPosition += new Vector3(0f, 0.0475f, 0f);
-
-                    imageTransform.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
-                }
-            }
-
-            AddPageButtons();
+            component2.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
 
             float hkbStartTime = -0.3f;
             if (!disableDisconnectButton)
@@ -1488,6 +1506,11 @@ namespace iiMenu.Menu
                 AddButton(-0.3f, -1, GetIndex("Disconnect"));
                 hkbStartTime -= 0.1f;
             }
+
+            if (homeButton && currentCategoryName != "Main")
+                AddReturnButton(false);
+
+            AddPageButtons();
 
             if (quickActions.Count > 0)
             {
@@ -1509,50 +1532,58 @@ namespace iiMenu.Menu
             int buttonIndexOffset = 0;
             ButtonInfo[] renderButtons = new ButtonInfo[] { };
 
-            if (annoyingMode && UnityEngine.Random.Range(1, 5) == 3)
+            try
             {
-                ButtonInfo disconnectButton = GetIndex("Disconnect");
-                renderButtons = Enumerable.Repeat(disconnectButton, 1000).ToArray();
-            }
-            else if (currentCategoryName == "Favorite Mods")
-            {
-                foreach (string favoriteMod in favorites)
+                if (annoyingMode && UnityEngine.Random.Range(1, 5) == 3)
                 {
-                    if (GetIndex(favoriteMod) == null)
-                        favorites.Remove(favoriteMod);
+                    ButtonInfo disconnectButton = GetIndex("Disconnect");
+                    renderButtons = Enumerable.Repeat(disconnectButton, 15).ToArray();
                 }
-
-                renderButtons = StringsToInfos(favorites.ToArray());
-            }
-            else if (currentCategoryName == "Enabled Mods")
-            {
-                List<ButtonInfo> enabledMods = new List<ButtonInfo>() { };
-                int categoryIndex = 0;
-                foreach (ButtonInfo[] buttonlist in Buttons.buttons)
+                else if (currentCategoryName == "Favorite Mods")
                 {
-                    foreach (ButtonInfo v in buttonlist)
+                    foreach (string favoriteMod in favorites)
                     {
-                        if (v.enabled && (!Buttons.categoryNames[categoryIndex].Contains("Settings")))
-                            enabledMods.Add(v);
+                        if (GetIndex(favoriteMod) == null)
+                            favorites.Remove(favoriteMod);
                     }
-                    categoryIndex++;
+
+                    renderButtons = StringsToInfos(favorites.ToArray());
                 }
-                enabledMods = enabledMods.OrderBy(v => v.buttonText).ToList();
-                enabledMods.Insert(0, GetIndex("Exit Enabled Mods"));
+                else if (currentCategoryName == "Enabled Mods")
+                {
+                    List<ButtonInfo> enabledMods = new List<ButtonInfo>() { };
+                    int categoryIndex = 0;
+                    foreach (ButtonInfo[] buttonlist in Buttons.buttons)
+                    {
+                        foreach (ButtonInfo v in buttonlist)
+                        {
+                            if (v.enabled)
+                                enabledMods.Add(v);
+                        }
+                        categoryIndex++;
+                    }
+                    enabledMods = enabledMods.OrderBy(v => v.buttonText).ToList();
+                    enabledMods.Insert(0, GetIndex("Exit Enabled Mods"));
 
-                renderButtons = enabledMods.ToArray();
+                    renderButtons = enabledMods.ToArray();
+                }
+                else
+                    renderButtons = Buttons.buttons[currentCategoryIndex];
+
+                if (!longmenu)
+                    renderButtons = renderButtons
+                        .Skip(pageNumber * (pageSize - buttonIndexOffset))
+                        .Take(pageSize - buttonIndexOffset)
+                        .ToArray();
+
+                for (int i = 0; i < renderButtons.Length; i++)
+                    AddButton((i + buttonIndexOffset + buttonOffset) * 0.1f, i, renderButtons[i]);
             }
-            else
-                renderButtons = Buttons.buttons[currentCategoryIndex];
-
-            if (!longmenu)
-                renderButtons = renderButtons
-                    .Skip(pageNumber * (pageSize - buttonIndexOffset))
-                    .Take(pageSize - buttonIndexOffset)
-                    .ToArray();
-
-            for (int i = 0; i < renderButtons.Length; i++)
-                AddButton((i + buttonIndexOffset) * 0.1f + (buttonOffset / 10), i, renderButtons[i]);
+            catch
+            {
+                MelonLoader.MelonLogger.Msg("Menu draw is erroring, returning to home page");
+                currentCategoryName = "Main";
+            }
 
             RecenterMenu();
         }
@@ -1632,9 +1663,8 @@ namespace iiMenu.Menu
                     TPC.transform.position = new Vector3(-999f, -999f, -999f);
                     TPC.transform.rotation = Quaternion.identity;
                     GameObject bg = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    bg.transform.localScale = new Vector3(10f, 10f, 0.01f);
+                    bg.transform.localScale = new Vector3(10f, 10f, 0.1f);
                     bg.transform.transform.position = TPC.transform.position + TPC.transform.forward;
-                    bg.GetComponent<Renderer>().material.color = new Color32((byte)(bgColorA.r * 50), (byte)(bgColorA.g * 50), (byte)(bgColorA.b * 50), 255);
                     GameObject.Destroy(bg, Time.deltaTime);
                     menu.transform.parent = TPC.transform;
                     menu.transform.position = (TPC.transform.position + (Vector3.Scale(TPC.transform.forward, new Vector3(0.5f, 0.5f, 0.5f)))) + (Vector3.Scale(TPC.transform.up, new Vector3(-0.02f, -0.02f, -0.02f)));
@@ -1669,194 +1699,58 @@ namespace iiMenu.Menu
 
         private static void AddPageButtons()
         {
-            if (pageButtonType == 1)
+            ExtGradient Gradient = buttonColors[0];
+
+            switch (pageButtonType)
             {
-                float num4 = 0f;
-                GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                case 1:
+                    CreatePageButtonPair(
+                        "PreviousPage", "NextPage",
+                        new Vector3(0.09f, thinmenu ? 0.9f : 1.3f, 0.1f * 0.8f),
+                        new Vector3(0.56f, 0f, 0.28f - (0.1f * (buttonOffset - 2))),
+                        new Vector3(0.56f, 0f, 0.28f - (0.1f * (buttonOffset - 1))),
+                        new Vector3(0.064f, 0f, 0.109f - 0.1f * (buttonOffset - 2) / 2.55f),
+                        new Vector3(0.064f, 0f, 0.109f - 0.1f * (buttonOffset - 1) / 2.55f),
+                        Gradient
+                    );
+                    break;
 
-                UnityEngine.Object.Destroy(gameObject.GetComponent<Rigidbody>());
-                gameObject.GetComponent<BoxCollider>().isTrigger = true;
-                gameObject.transform.parent = menu.transform;
-                gameObject.transform.rotation = Quaternion.identity;
-                if (thinmenu)
-                    gameObject.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
-                else
-                    gameObject.transform.localScale = new Vector3(0.09f, 1.3f, 0.08f);
-                
-                gameObject.transform.localPosition = new Vector3(0.56f, 0f, 0.28f - num4);
-                gameObject.AddComponent<Classes.Button>().relatedText = "PreviousPage";
-                GradientColorKey[] array = new GradientColorKey[3];
-                array[0].color = buttonDefaultA;
-                array[0].time = 0f;
-                array[1].color = buttonDefaultB;
-                array[1].time = 0.5f;
-                array[2].color = buttonDefaultA;
-                array[2].time = 1f;
-                ColorChanger colorChanger = gameObject.AddComponent<ColorChanger>();
-                colorChanger.colors = new Gradient
-                {
-                    colorKeys = array
-                };
-                colorChanger.Start();
-                gameObject.GetComponent<Renderer>().material.color = buttonDefaultA;
-                Text text = new GameObject
-                {
-                    transform =
-                    {
-                        parent = canvasObj.transform
-                    }
-                }.AddComponent<Text>();
-                text.font = activeFont;
-                text.text = "<";
-                text.fontSize = 1;
-                text.color = textColor;
-                text.alignment = TextAnchor.MiddleCenter;
-                text.resizeTextForBestFit = true;
-                text.resizeTextMinSize = 0;
-                RectTransform component = text.GetComponent<RectTransform>();
-                component.localPosition = Vector3.zero;
-                component.sizeDelta = new Vector2(0.2f, 0.03f);
-                component.localPosition = new Vector3(0.064f, 0f, 0.109f - num4 / 2.55f);
-                component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
-                num4 = 0.1f;
-                GameObject gameObject2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                case 2:
+                    CreatePageButtonPair(
+                        "PreviousPage", "NextPage",
+                        new Vector3(0.09f, 0.2f, 0.9f),
+                        new Vector3(0.56f, thinmenu ? 0.65f : 0.9f, 0f),
+                        new Vector3(0.56f, thinmenu ? -0.65f : -0.9f, 0f),
+                        new Vector3(0.064f, thinmenu ? 0.195f : 0.267f, 0f),
+                        new Vector3(0.064f, thinmenu ? -0.195f : -0.267f, 0f),
+                        Gradient
+                    );
+                    break;
 
-                UnityEngine.Object.Destroy(gameObject2.GetComponent<Rigidbody>());
-                gameObject2.GetComponent<BoxCollider>().isTrigger = true;
-                gameObject2.transform.parent = menu.transform;
-                gameObject2.transform.rotation = Quaternion.identity;
-                if (thinmenu)
-                    gameObject2.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
-                else
-                    gameObject2.transform.localScale = new Vector3(0.09f, 1.3f, 0.08f);
-                
-                gameObject2.transform.localPosition = new Vector3(0.56f, 0f, 0.28f - num4);
-                gameObject2.AddComponent<Classes.Button>().relatedText = "NextPage";
-                ColorChanger colorChanger2 = gameObject2.AddComponent<ColorChanger>();
-                colorChanger2.colors = new Gradient
-                {
-                    colorKeys = array
-                };
-                colorChanger2.Start();
-                gameObject2.GetComponent<Renderer>().material.color = buttonDefaultA;
-                Text text2 = new GameObject
-                {
-                    transform =
-                    {
-                        parent = canvasObj.transform
-                    }
-                }.AddComponent<Text>();
-                text2.font = activeFont;
-                text2.text = ">";
-                text2.fontSize = 1;
-                text2.color = textColor;
-                text2.fontStyle = FontStyle.Italic;
-                text2.alignment = TextAnchor.MiddleCenter;
-                text2.resizeTextForBestFit = true;
-                text2.resizeTextMinSize = 0;
-                RectTransform component2 = text2.GetComponent<RectTransform>();
-                component2.localPosition = Vector3.zero;
-                component2.sizeDelta = new Vector2(0.2f, 0.03f);
-                component2.localPosition = new Vector3(0.064f, 0f, 0.109f - num4 / 2.55f);
-                component2.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
-            }
+                case 5:
+                    CreatePageButtonPair(
+                        "PreviousPage", "NextPage",
+                        new Vector3(0.09f, hidetitle ? 0.1f : 0.3f, 0.05f),
+                        new Vector3(0.56f, (thinmenu ? 0.299f : 0.499f) + (hidetitle ? 0.1f : 0f), 0.355f + (hidetitle ? 0.1f : 0f)),
+                        new Vector3(0.56f, (thinmenu ? -0.299f : -0.499f) - (hidetitle ? 0.1f : 0f), 0.355f + (hidetitle ? 0.1f : 0f)),
+                        new Vector3(0.064f, (thinmenu ? 0.09f : 0.15f) + (hidetitle ? 0.035f : 0f), 0.135f + (hidetitle ? 0.0375f : 0f)),
+                        new Vector3(0.064f, (thinmenu ? -0.09f : -0.15f) - (hidetitle ? 0.035f : 0f), 0.135f + (hidetitle ? 0.0375f : 0f)),
+                        Gradient
+                    );
+                    break;
 
-            if (pageButtonType == 2)
-            {
-                GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-                UnityEngine.Object.Destroy(gameObject.GetComponent<Rigidbody>());
-                gameObject.GetComponent<BoxCollider>().isTrigger = true;
-                gameObject.transform.parent = menu.transform;
-                gameObject.transform.rotation = Quaternion.identity;
-                gameObject.transform.localScale = new Vector3(0.09f, 0.2f, 0.9f);
-                if (thinmenu)
-                    gameObject.transform.localPosition = new Vector3(0.56f, 0.65f, 0);
-                else
-                    gameObject.transform.localPosition = new Vector3(0.56f, 0.9f, 0);
-                
-                gameObject.AddComponent<Classes.Button>().relatedText = "PreviousPage";
-                GradientColorKey[] array = new GradientColorKey[3];
-                array[0].color = buttonDefaultA;
-                array[0].time = 0f;
-                array[1].color = buttonDefaultB;
-                array[1].time = 0.5f;
-                array[2].color = buttonDefaultA;
-                array[2].time = 1f;
-                ColorChanger colorChanger = gameObject.AddComponent<ColorChanger>();
-                colorChanger.colors = new Gradient
-                {
-                    colorKeys = array
-                };
-                colorChanger.Start();
-                gameObject.GetComponent<Renderer>().material.color = buttonDefaultA;
-                Text text = new GameObject
-                {
-                    transform =
-                    {
-                        parent = canvasObj.transform
-                    }
-                }.AddComponent<Text>();
-                text.font = activeFont;
-                text.text = "<";
-                text.fontSize = 1;
-                text.color = textColor;
-                text.alignment = TextAnchor.MiddleCenter;
-                text.resizeTextForBestFit = true;
-                text.resizeTextMinSize = 0;
-                RectTransform component = text.GetComponent<RectTransform>();
-                component.localPosition = Vector3.zero;
-                component.sizeDelta = new Vector2(0.2f, 0.03f);
-                if (thinmenu)
-                    component.localPosition = new Vector3(0.064f, 0.195f, 0f);
-                else
-                    component.localPosition = new Vector3(0.064f, 0.267f, 0f);
-                
-                component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
-
-                gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-                UnityEngine.Object.Destroy(gameObject.GetComponent<Rigidbody>());
-                gameObject.GetComponent<BoxCollider>().isTrigger = true;
-                gameObject.transform.parent = menu.transform;
-                gameObject.transform.rotation = Quaternion.identity;
-                gameObject.transform.localScale = new Vector3(0.09f, 0.2f, 0.9f);
-                if (thinmenu)
-                    gameObject.transform.localPosition = new Vector3(0.56f, -0.65f, 0);
-                else
-                    gameObject.transform.localPosition = new Vector3(0.56f, -0.9f, 0);
-                
-                gameObject.AddComponent<Classes.Button>().relatedText = "NextPage";
-                ColorChanger colorChanger2 = gameObject.AddComponent<ColorChanger>();
-                colorChanger2.colors = new Gradient
-                {
-                    colorKeys = array
-                };
-                colorChanger2.Start();
-                gameObject.GetComponent<Renderer>().material.color = buttonDefaultA;
-                text = new GameObject
-                {
-                    transform =
-                    {
-                        parent = canvasObj.transform
-                    }
-                }.AddComponent<Text>();
-                text.font = activeFont;
-                text.text = ">";
-                text.fontSize = 1;
-                text.color = textColor;
-                text.alignment = TextAnchor.MiddleCenter;
-                text.resizeTextForBestFit = true;
-                text.resizeTextMinSize = 0;
-                component = text.GetComponent<RectTransform>();
-                component.localPosition = Vector3.zero;
-                component.sizeDelta = new Vector2(0.2f, 0.03f);
-                if (thinmenu)
-                    component.localPosition = new Vector3(0.064f, -0.195f, 0f);
-                else
-                    component.localPosition = new Vector3(0.064f, -0.267f, 0f);
-                
-                component.rotation = Quaternion.Euler(new Vector3(180f, 90f, 90f));
+                case 6:
+                    CreatePageButtonPair(
+                        "PreviousPage", "NextPage",
+                        new Vector3(0.09f, 0.102f, 0.08f),
+                        new Vector3(0.56f, thinmenu ? 0.450f : 0.7f, -0.58f),
+                        new Vector3(0.56f, thinmenu ? 0.450f : 0.7f, -0.58f) - new Vector3(0f, 0.16f, 0f),
+                        new Vector3(0.064f, thinmenu ? 0.35f / 2.6f : 0.54444444444f / 2.6f, -0.58f / 2.7f),
+                        new Vector3(0.064f, thinmenu ? 0.35f / 2.6f : 0.54444444444f / 2.6f, -0.58f / 2.7f) - new Vector3(0f, 0.0475f, 0f),
+                        Gradient,
+                        new Vector2(0.03f, 0.03f)
+                    );
+                    break;
             }
         }
 
@@ -2146,9 +2040,6 @@ namespace iiMenu.Menu
                     }
                     else
                     {
-                        isUpdatingValues = true;
-                        valueChangeDelay = Time.time + 0.5f;
-                        changingName = true;
                         nameChange = PlayerName;
                     }
                 }
@@ -2186,13 +2077,6 @@ namespace iiMenu.Menu
 
                     //GorillaTagger.Instance.myVRRig.RPC("InitializeNoobMaterial", RpcTarget.All, new object[] { color.r, color.g, color.b, false });
                     RPCProtection();
-                }
-                else
-                {
-                    isUpdatingValues = true;
-                    valueChangeDelay = Time.time + 0.5f;
-                    changingColor = true;
-                    colorChange = color;
                 }
             }
             else
@@ -2333,6 +2217,27 @@ namespace iiMenu.Menu
                     }
                     else
                         MelonLoader.MelonLogger.Msg($"{buttonText} does not exist");
+                }
+            }
+            ReloadMenu();
+        }
+
+        public static void ToggleIncremental(string buttonText, bool increment)
+        {
+            ButtonInfo target = GetIndex(buttonText);
+            if (target != null)
+            {
+                if (increment)
+                {
+                    NotifiLib.SendNotification("<color=grey>[</color><color=green>INCREMENT</color><color=grey>]</color> " + target.toolTip);
+                    if (target.enableMethod != null)
+                        try { target.enableMethod.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod enableMethod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
+                }
+                else
+                {
+                    NotifiLib.SendNotification("<color=grey>[</color><color=red>DECREMENT</color><color=grey>]</color> " + target.toolTip);
+                    if (target.disableMethod != null)
+                        try { target.disableMethod.Invoke(); } catch (Exception exc) { MelonLoader.MelonLogger.Msg(string.Format("Error with mod disableMethod {0} at {1}: {2}", target.buttonText, exc.StackTrace, exc.Message)); }
                 }
             }
             ReloadMenu();

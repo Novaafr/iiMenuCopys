@@ -1,28 +1,29 @@
 using System;
-using MelonLoader;
 using UnityEngine;
-using Main = iiMenu.Menu.Main;
+using static iiMenu.Menu.Main;
 
 namespace iiMenu.Classes
 {
-    [RegisterTypeInIl2Cpp]
+    [MelonLoader.RegisterTypeInIl2Cpp]
     public class Button : MonoBehaviour
     {
-        public string relatedText = string.Empty;
-        public static float ButtonCooldown;
+        public Button(IntPtr e) : base(e) { }
+        public string relatedText;
 
-        public Button(IntPtr ptr) : base(ptr) { }
+        public bool incremental;
+        public bool positive;
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (Time.time <= ButtonCooldown)
-                return;
-            if (collider != Main.buttonCollider)
-                return;
-            if (Main.menu == null)
-                return;
-            ButtonCooldown = Time.time + 0.2f;
-            Main.Toggle(relatedText, true);
+            if (Time.time > buttonCooldown && (collider == buttonCollider) && menu != null)
+            {
+                buttonCooldown = Time.time + 0.2f;
+
+                if (incremental)
+                    ToggleIncremental(relatedText, positive);
+                else
+                    Toggle(relatedText, true);
+            }
         }
     }
 }

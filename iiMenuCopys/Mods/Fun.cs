@@ -287,7 +287,7 @@ namespace iiMenu.Mods
                 }
 
                 GameObject NewPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                NewPointer.GetComponent<Renderer>().material.color = bgColorA;
+                NewPointer.GetComponent<Renderer>().material.color = backgroundColor.GetCurrentColor();
                 NewPointer.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
                 NewPointer.transform.position = Ray.point;
                 UnityEngine.Object.Destroy(NewPointer.GetComponent<BoxCollider>());
@@ -547,7 +547,7 @@ namespace iiMenu.Mods
                 }
 
                 GameObject NewPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                NewPointer.GetComponent<Renderer>().material.color = bgColorA;
+                NewPointer.GetComponent<Renderer>().material.color = backgroundColor.GetCurrentColor();
                 NewPointer.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
                 NewPointer.transform.position = Ray.point;
                 UnityEngine.Object.Destroy(NewPointer.GetComponent<BoxCollider>());
